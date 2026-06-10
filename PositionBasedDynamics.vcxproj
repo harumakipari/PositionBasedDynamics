@@ -345,6 +345,12 @@
     <ClCompile Include="Source\Graphics\Sprite\Sprite.cpp" />
     <ClCompile Include="Source\Graphics\Sprite\SpriteBatch.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\PBD\DeformableModel.cpp" />
+    <ClCompile Include="Source\PBD\PbdContactConstraint.cpp" />
+    <ClCompile Include="Source\PBD\PbdFrictionConstraint.cpp" />
+    <ClCompile Include="Source\PBD\PbdSolver.cpp" />
+    <ClCompile Include="Source\PBD\PbdWorld.cpp" />
+    <ClCompile Include="Source\PBD\ShapeMatchingBody.cpp" />
     <ClCompile Include="Source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -509,9 +515,17 @@
     <ClInclude Include="Source\Graphics\Sprite\Sprite.h" />
     <ClInclude Include="Source\Graphics\Sprite\SpriteBatch.h" />
     <ClInclude Include="Source\Math\MathHelper.h" />
-    <ClInclude Include="Source\PBD\PBDConstaraintData.h" />
-    <ClInclude Include="Source\PBD\PBDParticleData.h" />
-    <ClInclude Include="Source\PBD\PBDSystem.h" />
+    <ClInclude Include="Source\PBD\DeformableModel.h" />
+    <ClInclude Include="Source\PBD\IndexRange.h" />
+    <ClInclude Include="Source\PBD\PbdCollision.h" />
+    <ClInclude Include="Source\PBD\PbdContactConstraint.h" />
+    <ClInclude Include="Source\PBD\PbdDistanceConstraint.h" />
+    <ClInclude Include="Source\PBD\PbdFrictionConstraint.h" />
+    <ClInclude Include="Source\PBD\PbdParticle.h" />
+    <ClInclude Include="Source\PBD\PbdSolver.h" />
+    <ClInclude Include="Source\PBD\PbdWorld.h" />
+    <ClInclude Include="Source\PBD\PositionBasedDynamics.h" />
+    <ClInclude Include="Source\PBD\ShapeMatchingBody.h" />
     <ClInclude Include="Source\pch.h" />
     <ClInclude Include="Source\Physics\Collider.h" />
     <ClInclude Include="Source\Physics\CollisionHelper.h" />

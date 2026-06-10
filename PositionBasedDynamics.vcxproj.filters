@@ -346,6 +346,24 @@
     <ClCompile Include="External\imgui\timer.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="Source\PBD\ShapeMatchingBody.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\DeformableModel.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\PbdWorld.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\PbdSolver.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\PbdContactConstraint.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\PbdFrictionConstraint.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\profiler.h">
@@ -494,15 +512,6 @@
     </ClInclude>
     <ClInclude Include="Source\Graphics\Shadow\ShadowMap.h">
       <Filter>Source\Graphics\Shadow</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PBD\PBDConstaraintData.h">
-      <Filter>Source\PBD</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PBD\PBDParticleData.h">
-      <Filter>Source\PBD</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PBD\PBDSystem.h">
-      <Filter>Source\PBD</Filter>
     </ClInclude>
     <ClInclude Include="Source\pch.h">
       <Filter>Source</Filter>
@@ -851,6 +860,39 @@
     </ClInclude>
     <ClInclude Include="External\imgui\timer.h">
       <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdParticle.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdWorld.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\ShapeMatchingBody.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\IndexRange.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdDistanceConstraint.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdCollision.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\DeformableModel.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PositionBasedDynamics.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdSolver.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdContactConstraint.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdFrictionConstraint.h">
+      <Filter>Source\PBD</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -20,7 +20,6 @@
 
 #include "UI/Widgets/Widget.h"
 
-#include "PBD/PBDSystem.h"
 
 class GameScene : public SceneBase
 {
@@ -86,9 +85,6 @@ private:
 
     std::thread loadStageThread;
     std::thread loadStageAssetsThread;
-
-    std::unique_ptr<PBD::System> pbd;
-
 
     std::shared_ptr<InterleavedGltfModel> model;
 
