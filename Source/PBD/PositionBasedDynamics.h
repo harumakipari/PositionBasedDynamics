@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PbdWorld.h"
+#include "PbdSolver.h"
 #include "PbdParticle.h"
 #include "PbdCollision.h"
 #include "ShapeMatchingBody.h"

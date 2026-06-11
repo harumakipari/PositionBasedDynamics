@@ -520,6 +520,7 @@
     <ClInclude Include="Source\Math\MathHelper.h" />
     <ClInclude Include="Source\PBD\DeformableModel.h" />
     <ClInclude Include="Source\PBD\IndexRange.h" />
+    <ClInclude Include="Source\PBD\PBDActor.h" />
     <ClInclude Include="Source\PBD\PbdCollision.h" />
     <ClInclude Include="Source\PBD\PbdContactConstraint.h" />
     <ClInclude Include="Source\PBD\PbdDistanceConstraint.h" />

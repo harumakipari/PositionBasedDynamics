@@ -909,6 +909,9 @@
     <ClInclude Include="Source\PBD\PbdParticleDebugRenderer.h">
       <Filter>Source\PBD</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PBD\PBDActor.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\AccumulateHuskParticlePS.hlsl">

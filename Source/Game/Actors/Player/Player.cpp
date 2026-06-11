@@ -32,8 +32,8 @@ void Player::Initialize(const Transform& transform)
         PROFILE_SCOPE("Create PlayerModel");
 
         skeletalMeshComponent = this->AddComponent<SkeletalMeshComponent>(parentName);
-        skeletalMeshComponent->SetModel("./Data/Models/Characters/Aurora_FrozenHealth/animation.gltf", false, true);
-        //skeletalMeshComponent->SetModel("./Data/Models/Characters/Player/player.gltf", false, true);
+        //skeletalMeshComponent->SetModel("./Data/Models/Characters/Aurora_FrozenHealth/animation.gltf", false, true);
+        skeletalMeshComponent->SetModel("./Data/Models/Characters/Player/player.gltf", false, true);
         skeletalMeshComponent->plusAlphaCBuffer->data.objectType = ObjectType::Player;   // オブジェクトの種類を Player に設定
         skeletalMeshComponent->plusAlphaCBuffer->data.emissionPower = 20.9f;   // 自己発光の強さを設定
 #if 1
@@ -63,7 +63,7 @@ void Player::Initialize(const Transform& transform)
         // ルートノードを設定する
         int rootNodeIndex = skeletalMeshComponent->FindIndexByName("root");
 
-#if 0
+#if 1
         // アニメーションコントローラーを作成
         auto controller = std::make_shared<AnimationController>(skeletalMeshComponent.get(), rootNodeIndex);
         controller->AddAnimation("Idle", 0);

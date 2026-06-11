@@ -535,7 +535,7 @@ void deformable_model::create_and_upload_resources(ID3D11Device* device)
 	hr=CreateVsFromCSO(device, "./Data/Shaders/DeformableModelVS.cso", vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-	hr=CreatePsFromCSO(device, "deformable_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
+	hr=CreatePsFromCSO(device, "./Data/Shaders/DeformableModelPS.cso", pixel_shader.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	buffer_desc.ByteWidth = sizeof(primitive_constants);
