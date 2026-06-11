@@ -532,7 +532,7 @@ void deformable_model::create_and_upload_resources(ID3D11Device* device)
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
-	hr=CreateVsFromCSO(device, "deformable_model_vs.cso", vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
+	hr=CreateVsFromCSO(device, "./Data/Shaders/DeformableModelVS.cso", vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	hr=CreatePsFromCSO(device, "deformable_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());

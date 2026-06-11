@@ -364,6 +364,15 @@
     <ClCompile Include="Source\PBD\PbdFrictionConstraint.cpp">
       <Filter>Source\PBD</Filter>
     </ClCompile>
+    <ClCompile Include="Source\PBD\VoxelVolume.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\PbdCollision.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\PbdParticleDebugRenderer.cpp">
+      <Filter>Source\PBD</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\profiler.h">
@@ -894,6 +903,12 @@
     <ClInclude Include="Source\PBD\PbdFrictionConstraint.h">
       <Filter>Source\PBD</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PBD\VoxelVolume.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\PbdParticleDebugRenderer.h">
+      <Filter>Source\PBD</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\AccumulateHuskParticlePS.hlsl">
@@ -1163,6 +1178,18 @@
     <FxCompile Include="Shader\WiredShapeRendererVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Shader\DeformableModelVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\DeformableModelPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\ParticleDebugRendererVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\ParticleDebugRendererPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\BidirectionalReflectanceDistributionFunction.hlsli">
@@ -1253,6 +1280,9 @@
       <Filter>Shader</Filter>
     </None>
     <None Include="Shader\WiredShapeRenderer.hlsli">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\DeformableModel.hlsli">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

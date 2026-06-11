@@ -346,11 +346,14 @@
     <ClCompile Include="Source\Graphics\Sprite\SpriteBatch.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\PBD\DeformableModel.cpp" />
+    <ClCompile Include="Source\PBD\PbdCollision.cpp" />
     <ClCompile Include="Source\PBD\PbdContactConstraint.cpp" />
     <ClCompile Include="Source\PBD\PbdFrictionConstraint.cpp" />
+    <ClCompile Include="Source\PBD\PbdParticleDebugRenderer.cpp" />
     <ClCompile Include="Source\PBD\PbdSolver.cpp" />
     <ClCompile Include="Source\PBD\PbdWorld.cpp" />
     <ClCompile Include="Source\PBD\ShapeMatchingBody.cpp" />
+    <ClCompile Include="Source\PBD\VoxelVolume.cpp" />
     <ClCompile Include="Source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -522,10 +525,12 @@
     <ClInclude Include="Source\PBD\PbdDistanceConstraint.h" />
     <ClInclude Include="Source\PBD\PbdFrictionConstraint.h" />
     <ClInclude Include="Source\PBD\PbdParticle.h" />
+    <ClInclude Include="Source\PBD\PbdParticleDebugRenderer.h" />
     <ClInclude Include="Source\PBD\PbdSolver.h" />
     <ClInclude Include="Source\PBD\PbdWorld.h" />
     <ClInclude Include="Source\PBD\PositionBasedDynamics.h" />
     <ClInclude Include="Source\PBD\ShapeMatchingBody.h" />
+    <ClInclude Include="Source\PBD\VoxelVolume.h" />
     <ClInclude Include="Source\pch.h" />
     <ClInclude Include="Source\Physics\Collider.h" />
     <ClInclude Include="Source\Physics\CollisionHelper.h" />
@@ -648,6 +653,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
+    <FxCompile Include="Shader\DeformableModelPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\DeformableModelVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="Shader\DepthOfFieldPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -707,6 +724,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\ParticleDebugRendererPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\ParticleDebugRendererVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\PostEffectPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -1007,6 +1036,7 @@
     <None Include="Shader\ComputeParticle.hlsli" />
     <None Include="Shader\ComputeParticleBitonicSort.hlsli" />
     <None Include="Shader\Constants.hlsli" />
+    <None Include="Shader\DeformableModel.hlsli" />
     <None Include="Shader\ElasticConstants.hlsli" />
     <None Include="Shader\FilterFunctions.hlsli" />
     <None Include="Shader\Font.hlsli" />
