@@ -60,6 +60,8 @@ namespace PBD
         float phi = 0.0f;                        // 符号付き距離
         DirectX::XMFLOAT3 normal{ 0,1,0 };         // 正規化済み法線
         DirectX::XMFLOAT3 position{ 0,0,0 };      // ワールド座標上の接触位置
+        DirectX::XMFLOAT3 surfaceVelocity = { 0,0,0 };  // 表面速度
+
         float friction = 1.0f;// 摩擦係数
 
         int feature_id = invalid_index;// 接触フィーチャID
@@ -113,7 +115,6 @@ namespace PBD
     class plane_shape final : public CollisionShape
     {
     public:
-
         plane_shape(
             DirectX::XMFLOAT3 n,
             float d,
@@ -160,6 +161,8 @@ namespace PBD
 
         DirectX::XMFLOAT3 center{ 0,0,0 };
         float radius = 1.0f;
+
+        DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.0f }; //　角速度
     };
 
 }

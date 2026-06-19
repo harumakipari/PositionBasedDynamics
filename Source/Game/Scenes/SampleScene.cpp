@@ -28,6 +28,7 @@
 
 #include "Game/DarkGame/DarkActors/DarkEnemy/SkeletonWarriorEnemy.h"
 #include "Game/SofyBody/PlaneActor.h"
+#include "Game/SofyBody/SphereActor.h"
 
 #include "Physics/CollisionSystem.h"
 #include "UI/UIManager.h"
@@ -87,7 +88,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
             return static_cast<int>(pbdActors.size() - 1);
 
 #endif // 0
-           
+
         };
 
     ID3D11DeviceContext* immediateContext = Graphics::GetDeviceContext();
@@ -99,7 +100,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
     spawn_deformable_actor(device, immediateContext, model_0, { 1, 2, 0 });
 
     int model_1 = static_cast<int>(deformable_models.size());
-    deformable_models.emplace_back(std::make_unique<class deformable_model>(device ,"./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
+    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
     spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
 
     world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
@@ -133,7 +134,13 @@ void SampleScene::Update(float deltaTime)
         else if (PBD::sphere_shape* sphere_shape = dynamic_cast<PBD::sphere_shape*>(collision_shape.get()))
         {
             sphere_shape->center = center;
-            sphere_shape->radius= radius;
+            sphere_shape->radius = radius;
+            sphere_shape->angularVelocity = angularVelocity;
+
+            sphereActor->SetPosition(sphere_shape->center);
+            DirectX::XMFLOAT3 angleDegree = sphereActor->GetEulerRotation();
+            angleDegree = MathHelper::Add(angleDegree, sphere_shape->angularVelocity);
+            sphereActor->SetEulerRotation(angleDegree);
         }
     }
     // PBD
@@ -307,7 +314,7 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
     }
 #endif // 0
 
-#if 1
+#if 0
     for (const auto& collision_shape : world.collision_shapes)
     {
         if (PBD::plane_shape* plane_shape = dynamic_cast<PBD::plane_shape*>(collision_shape.get()))
@@ -440,6 +447,10 @@ void SampleScene::SetUpActors()
 
     auto pauseActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Pause>("pauseActor");
 
+    Transform sphereTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    sphereActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor", sphereTr);
+
+
     cameraManager->SetDebugCamera(debugCameraActor);
 }
 
@@ -467,8 +478,9 @@ void SampleScene::DrawGui()
         body.scale = 1.0f;
     }
 
-    ImGui::DragFloat3("center", &center.x,0.1f);
-    ImGui::DragFloat("radius", &radius,0.1f,0.0f,5.0f);
+    ImGui::DragFloat3("center", &center.x, 0.1f);
+    ImGui::DragFloat3("angularVelocity", &angularVelocity.x, 0.1f);
+    ImGui::DragFloat("radius", &radius, 0.1f, 0.0f, 5.0f);
 #if 0
     if (ImGui::Button("Button"))
     {

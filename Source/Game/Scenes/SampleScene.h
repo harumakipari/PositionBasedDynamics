@@ -24,6 +24,8 @@
 #include "PBD/PbdParticleDebugRenderer.h"
 #include "PBD/PBDActor.h"
 
+class SphereActor;
+
 class SampleScene : public SceneBase
 {
 public:
@@ -70,6 +72,9 @@ private:
 
 
     DirectX::XMFLOAT3 center = { 0.0f,0.0f,0.0f };
+    DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.0f };    // Šp‘¬“x
     float radius = 1.0f;
+
+    std::shared_ptr<SphereActor> sphereActor;
 
 };

@@ -373,6 +373,9 @@
     <ClCompile Include="Source\PBD\PbdParticleDebugRenderer.cpp">
       <Filter>Source\PBD</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\SofyBody\SphereActor.cpp">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\profiler.h">
@@ -913,6 +916,9 @@
       <Filter>Source\PBD</Filter>
     </ClInclude>
     <ClInclude Include="Source\Game\SofyBody\PlaneActor.h">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\SofyBody\SphereActor.h">
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
   </ItemGroup>

@@ -88,6 +88,9 @@ namespace PBD
         // に従って、
         // 接線方向移動量を制限するために使用する。
         float normal_correction = 0.0f;
+
+        // 表面速度
+        DirectX::XMFLOAT3 surfaceVelocity = { 0.0f,0.0f,0.0f };
     };
 
 

@@ -268,11 +268,17 @@ namespace PBD
 		XMVECTOR n = XMVector3Normalize(XMLoadFloat3(&fc.normal));
 
 		// displacement（位置差分）
-		XMVECTOR v = XMVectorSubtract(x, x_prev);
+		XMVECTOR particleVelocity = XMVectorSubtract(x, x_prev);
+
+		XMVECTOR surfaceVelocity = DirectX::XMLoadFloat3(&fc.surfaceVelocity);
+
+		// TODO:表面速度を無効にする場合は下記を使用する
+		//XMVECTOR relativeVelocity = particleVelocity;
+		XMVECTOR relativeVelocity = XMVectorSubtract(particleVelocity, surfaceVelocity);
 
 		// 法線成分除去
-		float vn = XMVectorGetX(XMVector3Dot(v, n));
-		XMVECTOR vt = XMVectorSubtract(v, XMVectorScale(n, vn));
+		float vn = XMVectorGetX(XMVector3Dot(relativeVelocity, n));
+		XMVECTOR vt = XMVectorSubtract(relativeVelocity, XMVectorScale(n, vn));
 
 		float vt_len = XMVectorGetX(XMVector3Length(vt));
 		if (vt_len < 1e-6f)

@@ -125,6 +125,8 @@ namespace PBD
         fc.normal_correction =
             std::max<float>(0.0f, -cc.phi * cc.stiffness);
 
+        fc.surfaceVelocity = c.surfaceVelocity;
+
         return fc;
     }
 
