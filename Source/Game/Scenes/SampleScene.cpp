@@ -27,6 +27,7 @@
 #include "Game/DarkGame/DarkActors/DarkStageChandelierActor.h"
 
 #include "Game/DarkGame/DarkActors/DarkEnemy/SkeletonWarriorEnemy.h"
+#include "Game/SofyBody/PlaneActor.h"
 
 #include "Physics/CollisionSystem.h"
 #include "UI/UIManager.h"
@@ -40,25 +41,6 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
     //アクターをセット
     SetUpActors();
-
-#if 0
-    morphModel = std::make_unique<MorphModel>(device, "./Data/Models/Morph/morphSphere.gltf");
-
-    RegisterRenderHook(RenderPass::Opaque, [&](ID3D11DeviceContext* immediateContext)
-        {
-            if (const auto cloth = GetActorManager()->GetActorByName("cloth"))
-            {
-                morphModel->Render(immediateContext, cloth->GetWorldTransform(), {}, MorphModel::RenderPass::All);
-            }
-        });
-#endif // 0
-
-    RegisterRenderHook(RenderPass::Opaque, [&](ID3D11DeviceContext* immediateContext)
-        {
-            if (const auto cloth = GetActorManager()->GetActorByName("pauseActor"))
-            {
-            }
-        });
 
     // PBD
     solver = std::make_unique<PBD::Solver>();
@@ -105,7 +87,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
             return static_cast<int>(pbdActors.size() - 1);
 
 #endif // 0
-            return true;
+           
         };
 
     ID3D11DeviceContext* immediateContext = Graphics::GetDeviceContext();
@@ -120,52 +102,10 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
     deformable_models.emplace_back(std::make_unique<class deformable_model>(device ,"./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
     spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
 
-
-    world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, -1.0f/*distance*/, 0x0001/*phase*/);
+    world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
     world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
 
     particle_debug_renderer = std::make_unique<class particle_debug_renderer>(device, world.particles.size());
-
-
-    RegisterRenderHook(RenderPass::ForwardBlend, [&](ID3D11DeviceContext* immediateContext)
-        {
-            RenderState::BindDepthStencilState(immediateContext, DEPTH_STATE::ZT_ON_ZW_ON);
-            RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_BACK);
-#if 1
-
-            // --------------------------------------------------------
-            // Particleデバッグ描画
-            // --------------------------------------------------------
-            if (show_particles)
-            {
-                particle_debug_renderer->draw(immediateContext, world.particles);
-            }
-            else
-            {
-                // 現在のParticle位置からGPU頂点バッファを更新し、
-                // 変形後のメッシュを描画する
-                for (const auto& actor : pbdActors)
-                {
-                    auto& body = world.bodies[actor.body];
-#if 0
-                    if (body.active == false)
-                    {
-                        continue;
-                    }
-#endif // 0
-
-                    DirectX::XMFLOAT4X4 deformation_rotation;
-                    DirectX::XMStoreFloat4x4(&deformation_rotation, body.transform);
-                    if (show_wireframe)
-                        RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::WIREFRAME_CULL_NONE);
-                    else
-                        RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_NONE);
-                    deformable_models[actor.model]->draw(immediateContext, body.instance_index, deformation_rotation);
-                }
-            }
-#endif // 0
-        });
-
 
     return true;
 }
@@ -185,6 +125,17 @@ void SampleScene::Update(float deltaTime)
     CollisionSystem::DetectAndResolveCollisions();
     CollisionSystem::ApplyPushAll();
 
+    for (const auto& collision_shape : world.collision_shapes)
+    {
+        if (PBD::plane_shape* plane_shape = dynamic_cast<PBD::plane_shape*>(collision_shape.get()))
+        {
+        }
+        else if (PBD::sphere_shape* sphere_shape = dynamic_cast<PBD::sphere_shape*>(collision_shape.get()))
+        {
+            sphere_shape->center = center;
+            sphere_shape->radius= radius;
+        }
+    }
     // PBD
     auto& body = world.get_shape_matching_body(0);
     if (enable_simulation && GetAsyncKeyState('R') & 0x8000)
@@ -227,13 +178,16 @@ void SampleScene::Update(float deltaTime)
         const char* types[] = { "0", "1" };
         Scene::_transition("LoadingScene", { std::make_pair("preload", "SampleScene"), std::make_pair("type", types[rand() % 2]) });
     }
-
 #endif // 0
     //#endif // !_DEBUG
 }
 
 void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
 {
+#ifdef USE_IMGUI
+    imGuiGizmoBuffer->Clear(immediateContext);
+    imGuiGizmoBuffer->Activate(immediateContext);
+#endif
 
     // PBD
     if (GetAsyncKeyState('K') & 0x8000)
@@ -283,13 +237,48 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
         }
     }
 
-    SceneBase::Render(immediateContext, deltaTime);
+    UpdateConstantBuffer(immediateContext, deltaTime);
+    ViewConstants data = {};
+    if (auto camera = cameraManager->GetRenderCamera(this))
+    {
+        data = camera->GetViewConstants();
+        sceneRender.UpdateViewConstants(immediateContext, data);
+    }
+    else
+    {
+        Logger::Error(U8("カメラがない"));
+    }
 
-#if 0
+    multipleRenderTargets->Clear(immediateContext);
+    multipleRenderTargets->Activate(immediateContext);
 
-    // --------------------------------------------------------
+    //auto camera = CameraManager::GetRenderCamera(this);
+    auto camera = cameraManager->GetRenderCamera(this);
+    if (!camera)
+        return;
+
+    // スカイマップを描画
+    RenderState::BindDepthStencilState(immediateContext, DEPTH_STATE::ZT_OFF_ZW_OFF);
+    RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_NONE);
+    skyMap->Blit(immediateContext, data.viewProjection);
+    ExecuteHooks(RenderPass::Sky, immediateContext);
+
+    auto queues = sceneRender.BuildRenderQueues();
+
+    // オブジェクトを描画
+    RenderState::BindBlendState(immediateContext, BLEND_STATE::MULTIPLY_RENDER_TARGET_ALPHA);
+    RenderState::BindDepthStencilState(immediateContext, DEPTH_STATE::ZT_ON_ZW_ON);
+    //RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_BACK);
+    RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_NONE);
+    sceneRender.currentRenderPath = RenderPath::Forward;
+    sceneRender.RenderOpaque(immediateContext, queues.meshes);
+    RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_NONE);
+    ExecuteHooks(RenderPass::Opaque, immediateContext);
+    sceneRender.RenderMask(immediateContext, queues.meshes);
+    ExecuteHooks(RenderPass::Mask, immediateContext);
+
+#if 1
     // Particleデバッグ描画
-    // --------------------------------------------------------
     if (show_particles)
     {
         particle_debug_renderer->draw(immediateContext, world.particles);
@@ -307,7 +296,6 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
                 continue;
             }
 #endif // 0
-
             DirectX::XMFLOAT4X4 deformation_rotation;
             DirectX::XMStoreFloat4x4(&deformation_rotation, body.transform);
             if (show_wireframe)
@@ -319,15 +307,11 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
     }
 #endif // 0
 
-
-
-#if 0
+#if 1
     for (const auto& collision_shape : world.collision_shapes)
     {
-        //position_based_dynamics::plane_shape* plane_shape = dynamic_cast<position_based_dynamics::plane_shape*>(collision_shape.get());
         if (PBD::plane_shape* plane_shape = dynamic_cast<PBD::plane_shape*>(collision_shape.get()))
         {
-
             DirectX::XMFLOAT3 plane_normal = plane_shape->normal;
             float plane_d = plane_shape->distance;
 
@@ -352,8 +336,8 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
             DirectX::XMFLOAT4X4 transform;
             DirectX::XMStoreFloat4x4(&transform, DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f) * R * DirectX::XMMatrixTranslationFromVector(O));
 
-            RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::WIREFRAME_CULL_NONE);
-            plane->render(immediateContext, transform, {});
+            //RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::WIREFRAME_CULL_NONE);
+            //DebugRender::DrawBox({ 0.0f,-1.0f,0.0f }, { 10.0f,1.0f,10.0f }, { 1,1,0,1 }, 0, true);
         }
         else if (PBD::sphere_shape* sphere_shape = dynamic_cast<PBD::sphere_shape*>(collision_shape.get()))
         {
@@ -363,55 +347,98 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
             DirectX::XMFLOAT4X4 transform;
             DirectX::XMStoreFloat4x4(&transform, DirectX::XMMatrixScaling(sphere_radius, sphere_radius, sphere_radius) * DirectX::XMMatrixTranslation(sphere_center.x, sphere_center.y, sphere_center.z));
             RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::WIREFRAME_CULL_NONE);
-            sphere->render(immediateContext, transform, {});
+            DebugRender::DrawSphere(sphere_center, sphere_radius, { 1,0,0,1 });
         }
     }
 #endif // 0
 
+    sceneRender.RenderBlend(immediateContext, queues.meshes);
+    sceneRender.RenderBlend(immediateContext, queues.meshes);
+    ExecuteHooks(RenderPass::ForwardBlend, immediateContext);
+
+    // デバック描画
+#if _DEBUG
+    if (useDrawDebug)
+    {
+        RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_BACK);
+        //Physics::Instance().Render(data.view, data.projection, { lightManager->GetLightDirection().x,lightManager->GetLightDirection().y,lightManager->GetLightDirection().z });
+        DebugRender::Render(immediateContext);
+        RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::WIREFRAME_CULL_NONE);
+        DebugRender::WiredRender(immediateContext);
+        ExecuteHooks(RenderPass::Debug, immediateContext);
+    }
+#endif
+    RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_BACK);
+    multipleRenderTargets->Deactivate(immediateContext);
+
+
+    DirectX::XMFLOAT4X4 cameraView;
+    DirectX::XMFLOAT4X4 cameraProjection;
+
+    if (camera)
+    {
+        ViewConstants data = camera->GetViewConstants();
+        cameraView = data.view;
+        cameraProjection = data.projection;
+    }
+    // カスケードシャドウマップ生成
+    cascadedShadowMaps->Clear(immediateContext);
+    auto& shadow = Scene::GetCurrentScene()->GetSceneSettings().cascadedShadowMapConstants;
+    cascadedShadowMaps->Activate(immediateContext, cameraView, cameraProjection, lightManager->GetLightDirection(), shadow.criticalDepthValue, 3/*cbSlot*/);
+    RenderState::BindBlendState(immediateContext, BLEND_STATE::NONE);
+    RenderState::BindDepthStencilState(immediateContext, DEPTH_STATE::ZT_ON_ZW_ON);
+    RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_NONE);
+    sceneRender.currentRenderPath = RenderPath::Shadow;
+    sceneRender.CastShadowRender(immediateContext, queues.shadowCasters);
+    cascadedShadowMaps->Deactivate(immediateContext);
+
+    // ファイナルパス
+    {
+        RenderState::BindBlendState(immediateContext, BLEND_STATE::NONE);
+        RenderState::BindDepthStencilState(immediateContext, DEPTH_STATE::ZT_OFF_ZW_OFF);
+        RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_NONE);
+
+        sceneEffectManager->ApplyAll(immediateContext, multipleRenderTargets->renderTargetShaderResourceViews[static_cast<int>(M_SRV_SLOT::COLOR)], multipleRenderTargets->renderTargetShaderResourceViews[static_cast<int>(M_SRV_SLOT::NORMAL)],
+            multipleRenderTargets->depthStencilShaderResourceView, multipleRenderTargets->renderTargetShaderResourceViews[static_cast<int>(M_SRV_SLOT::POSITION)], nullptr/*ディファードの時に使用するmaterial の値*/, cascadedShadowMaps->depthMap().Get());
+
+
+        ID3D11ShaderResourceView* shader_resource_views[]
+        {
+            multipleRenderTargets->renderTargetShaderResourceViews[static_cast<int>(M_SRV_SLOT::COLOR)],
+            multipleRenderTargets->renderTargetShaderResourceViews[static_cast<int>(M_SRV_SLOT::POSITION)],
+            multipleRenderTargets->renderTargetShaderResourceViews[static_cast<int>(M_SRV_SLOT::NORMAL)],
+            multipleRenderTargets->depthStencilShaderResourceView,
+            sceneEffectManager->GetOutput("BloomEffect"),
+            sceneEffectManager->GetOutput("FogEffect"),
+            sceneEffectManager->GetOutput("SSAOEffect"),
+            sceneEffectManager->GetOutput("SSREffect"),
+            cascadedShadowMaps->depthMap().Get(),
+        };
+        fullscreenQuad->Blit(immediateContext, shader_resource_views, 0, _countof(shader_resource_views), postEffectPs.Get());
+    }
+#ifdef USE_IMGUI
+    imGuiGizmoBuffer->Deactivate(immediateContext);
+#endif
 }
 
 void SampleScene::SetUpActors()
 {
     auto mainCameraActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<MainCamera>("mainCameraActor");
-    auto mainCameraComponent = mainCameraActor->GetComponent<TPSCameraComponent>();
 
-    Transform enemyTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto enemy = this->GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("enemy", enemyTr);
+    Transform targetTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    auto targetActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("target", targetTr);
 
-    mainCameraActor->SetTarget(enemy->GetRootComponent());
+    mainCameraActor->SetTarget(targetActor->GetRootComponent());
     SetActiveCamera(mainCameraActor);
-    Logger::Log(U8("morphシーンのカメラ設定される。"));
+    Logger::Log(U8("SampleSceneのカメラ設定される。"));
 
     Transform stageTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto stage = this->GetActorManager()->CreateAndRegisterActorWithTransform<Stage>("stage", stageTr);
+    auto stage = this->GetActorManager()->CreateAndRegisterActorWithTransform<PlaneActor>("PlaneActor", stageTr);
 
-    auto debugCameraActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<DebugCamera>("debugCam");
-    debugCameraActor->SetPosition({ 0.0f,10.0f,-20.0f });
+    Transform debugCameraTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    auto debugCameraActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<DebugCamera>("debugCam", debugCameraTr);
 
-    //building->AddComponent<StaticMeshComponent>("cloth")->SetModel("./Data/Models/ClothFlag/pole.gltf");
-
-    Transform buildTr2(DirectX::XMFLOAT3{ -3.0f,0.45f,3.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 0.8f,0.8f,0.8f });
-    auto pauseActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Pause>("pauseActor", buildTr2);
-
-    Transform playerTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto player = this->GetActorManager()->CreateAndRegisterActorWithTransform<Player>("player", playerTr);
-
-#if 1
-    Transform testPlayerTr(DirectX::XMFLOAT3{ 3.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto testPlayer = this->GetActorManager()->CreateAndRegisterActorWithTransform<TestPlayer>("testPlayer", testPlayerTr);
-#endif // 1
-
-    std::shared_ptr<StageAsset> stageCandelabraAsset = std::make_shared<StageAsset>();
-    stageCandelabraAsset->model = std::make_shared<InterleavedGltfModel>(Graphics::GetDevice(), "./Data/Models/DarkStageAssets/Candelabra/Candelabra.gltf", ModelTypes::ModelMode::StaticMesh, false, true);
-    stageCandelabraAsset->spawnPoints = stageCandelabraAsset->model->spawnPoints;
-
-    Transform chandelierTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto chandelier = this->GetActorManager()->CreateAndRegisterActorWithTransform<DarkStageCandelabraActor>("chandelier", chandelierTr);
-    chandelier->SetModel(stageCandelabraAsset);
-
-
-    //Transform chandelierTr(DirectX::XMFLOAT3{ 0.0f,3.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    //auto chandelier = this->GetActorManager()->CreateAndRegisterActorWithTransform<DarkStageChandelierActor>("chandelier", chandelierTr);
+    auto pauseActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Pause>("pauseActor");
 
     cameraManager->SetDebugCamera(debugCameraActor);
 }
@@ -425,5 +452,29 @@ bool SampleScene::Uninitialize(ID3D11Device* device)
 
 void SampleScene::DrawGui()
 {
+#ifdef USE_IMGUI
     SceneBase::DrawGui();
+    ImGui::Begin("pbd");
+    ImGui::Checkbox("show_particles", &show_particles);
+    ImGui::Checkbox("enable_simulation", &enable_simulation);
+    ImGui::Checkbox("show_wireframe", &show_wireframe);
+    // PBD
+    auto& body = world.get_shape_matching_body(0);
+    if (ImGui::Button("Reset"))
+    {
+        body.reset_to_rest_state(world.particles);
+        body.set_position(world.particles, { 0, 2, 0 });
+        body.scale = 1.0f;
+    }
+
+    ImGui::DragFloat3("center", &center.x,0.1f);
+    ImGui::DragFloat("radius", &radius,0.1f,0.0f,5.0f);
+#if 0
+    if (ImGui::Button("Button"))
+    {
+        body.set_position(world.particles, { 0, 2, 0 });
+    }
+#endif // 1
+    ImGui::End();
+#endif
 }

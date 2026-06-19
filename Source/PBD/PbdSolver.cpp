@@ -298,15 +298,21 @@ namespace PBD
 	// ------------------------------------------------------------
 	// project_contact_constraint
 	//
-	// Resolves penetration by pushing particles along the
-	// contact normal direction.
+	// 接触拘束（Contact Constraint）を解き、
+	// めり込んだParticleを接触法線方向へ押し戻す。
 	//
-	// Correction:
+	// 補正式:
+	//
 	//   Δx = -φ n
 	//
-	// where φ < 0 indicates penetration.
+	// ここで
 	//
-	// Stiffness is scaled to be iteration-independent.
+	//   φ < 0
+	//
+	// はめり込みを表す。
+	//
+	// StiffnessはSolverの反復回数に依存しないように
+	// スケーリングされる。
 	// ------------------------------------------------------------
 	void Solver::project_contact_constraint(PBDWorld& world, const ContactConstraint& cc)
 	{

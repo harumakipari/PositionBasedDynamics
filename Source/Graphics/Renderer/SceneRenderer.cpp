@@ -385,6 +385,8 @@ void SceneRenderer::Draw(ID3D11DeviceContext* immediateContext, const MeshCompon
                         continue;
                     }
 
+                    RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_NONE);
+
                     const int textureIndices[] =
                     {
                         material.data.pbrMetallicRoughness.basecolorTexture.index,
@@ -426,7 +428,6 @@ void SceneRenderer::Draw(ID3D11DeviceContext* immediateContext, const MeshCompon
     {
         traverse(nodeIndex);
     }
-
 }
 
 void SceneRenderer::DrawWithStaticBatching(ID3D11DeviceContext* immediateContext, const MeshComponent* meshComponent, const DirectX::XMFLOAT4X4& world, const std::vector<InterleavedGltfModel::Node>& animatedNodes, InterleavedGltfModel::RenderPass pass) const

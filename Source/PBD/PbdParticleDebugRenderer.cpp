@@ -43,5 +43,4 @@ void particle_debug_renderer::draw(ID3D11DeviceContext* immediate_context, const
 	immediate_context->PSSetShader(particle_debug_renderer_ps.Get(), NULL, 0);
 	immediate_context->IASetInputLayout(particle_input_layout.Get());
 	immediate_context->Draw(static_cast<UINT>(particle_count), 0);
-
 }

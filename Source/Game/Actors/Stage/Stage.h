@@ -105,8 +105,6 @@ public:
         leftWallComponent->SetResponseToLayer(CollisionLayer::WorldProps, CollisionComponent::CollisionResponse::Block);
         leftWallComponent->Initialize();
 
-
-
 #endif // 0
 
         std::shared_ptr<TriangleMeshCollisionComponent> triangleMeshComponent = this->AddComponent<class TriangleMeshCollisionComponent>("triangleMeshComponent", "staticMeshComponent");
