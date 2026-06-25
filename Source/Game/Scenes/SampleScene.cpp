@@ -27,6 +27,7 @@
 #include "Game/DarkGame/DarkActors/DarkStageChandelierActor.h"
 
 #include "Game/DarkGame/DarkActors/DarkEnemy/SkeletonWarriorEnemy.h"
+#include "Game/SofyBody/CubeActor.h"
 #include "Game/SofyBody/PlaneActor.h"
 #include "Game/SofyBody/SphereActor.h"
 
@@ -94,29 +95,28 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
     int model_0 = static_cast<int>(deformable_models.size());
     //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/YarnEnemy.glb", 1.f/*scale_factor*/));
-    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/Car/red.glb", 0.5f/*scale_factor*/));
-    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device.Get(), "./resources/pikachu.glb", 0.03f/*scale_factor*/));
+    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/Car/red.glb", 0.5f/*scale_factor*/));
+    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./resources/pikachu.glb", 0.03f/*scale_factor*/));
+    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
     int index = spawn_deformable_actor(device, immediateContext, model_0, { -1, 2, 0 });
 
 #if 0
-    index= spawn_deformable_actor(device, immediateContext, model_0, { 1, 2, 0 });
+    index = spawn_deformable_actor(device, immediateContext, model_0, { 1, 2, 0 });
 
     int model_1 = static_cast<int>(deformable_models.size());
     deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
-    index= spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
+    index = spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
 
 #endif // 0
 
     world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
-    sphereIndex = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
-    sphereIndex1 = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
+    //sphereIndex = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
+    //sphereIndex1 = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
+
+    boxIndex = world.spawn_collision_shape<PBD::box_shape>(DirectX::XMFLOAT3{ -1.5f,-1.5f,-1.5f }, DirectX::XMFLOAT3{ 1.5f,1.5f,1.5f }, 0x0001/*phase*/);
 
     particle_debug_renderer = std::make_unique<class particle_debug_renderer>(device, world.particles.size());
 
-    Transform stageTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto actor = GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("stage", stageTr);
-    auto mesh=actor->AddComponent<StaticMeshComponent>("staticMeshComponent");
-    mesh->SetModel("./Data/Models/Stage/Stage.gltf");
 
     return true;
 }
@@ -136,6 +136,7 @@ void SampleScene::Update(float deltaTime)
     CollisionSystem::DetectAndResolveCollisions();
     CollisionSystem::ApplyPushAll();
 
+#if 0
     auto& sphereA = world.get_collision_shape(sphereIndex);
     if (auto* sphere = dynamic_cast<PBD::sphere_shape*>(&sphereA))
     {
@@ -161,6 +162,15 @@ void SampleScene::Update(float deltaTime)
         angleDegree = MathHelper::Add(angleDegree, sphere->angularVelocity);
         sphereActor1->SetEulerRotation(angleDegree);
     }
+#endif // 0
+
+
+    auto& boxShape = world.get_collision_shape(boxIndex);
+    if (auto* box = dynamic_cast<PBD::box_shape*>(&boxShape))
+    {
+        box->center = cubeActor->GetPosition();
+        box->extent = cubeActor->extent;
+    }
 
 
     // PBD
@@ -172,6 +182,9 @@ void SampleScene::Update(float deltaTime)
         body.scale = 1.0f;
     }
     body.constrain_rotation_to_y = constrain_rotation_to_y;
+    body.scale = bodyScale;
+    body.deformation_blend = deformationBlend;
+    body.stiffness = stiffness;
     if (enable_simulation && GetAsyncKeyState('T') & 0x8000)
     {
         body.set_position(world.particles, { 0, 2, 0 });
@@ -466,10 +479,20 @@ void SampleScene::SetUpActors()
     auto debugCameraActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<DebugCamera>("debugCam", debugCameraTr);
 
     auto pauseActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Pause>("pauseActor");
+#if 0
 
     Transform sphereTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     sphereActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor", sphereTr);
     sphereActor1 = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor1", sphereTr);
+
+#endif // 0
+
+    Transform cubeTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    cubeActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor", cubeTr);
+
+    auto actor = GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("stage", stageTr);
+    auto mesh = actor->AddComponent<StaticMeshComponent>("staticMeshComponent");
+    mesh->SetModel("./Data/Models/Stage/Stage.gltf");
 
 
     cameraManager->SetDebugCamera(debugCameraActor);
@@ -485,12 +508,18 @@ bool SampleScene::Uninitialize(ID3D11Device* device)
 void SampleScene::DrawGui()
 {
 #ifdef USE_IMGUI
+
     SceneBase::DrawGui();
     ImGui::Begin("pbd");
     ImGui::Checkbox("show_particles", &show_particles);
     ImGui::Checkbox("enable_simulation", &enable_simulation);
     ImGui::Checkbox("show_wireframe", &show_wireframe);
     ImGui::Checkbox("constrain_rotation_to_y", &constrain_rotation_to_y);
+    ImGui::DragFloat("scale", &bodyScale, 0.01f, 0.01f, 10.0f, "%.4f");
+    ImGui::DragFloat("stiffness", &stiffness, 0.001f, 0.0001f, 1.0f, "%.4f");
+    ImGui::DragFloat("deformation_blend", &deformationBlend, 0.001f, 0.0f, 1.0f, "%.4f");
+    ImGui::SliderInt("solver_iterations", &solver->solver_iterations, 0, 30);
+
     // PBD
     auto& body = world.get_shape_matching_body(0);
     if (ImGui::Button("Reset"))

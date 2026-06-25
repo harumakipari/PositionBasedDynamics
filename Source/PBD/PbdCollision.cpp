@@ -183,7 +183,68 @@ bool PBD::sphere_shape::collide(
 
     XMVECTOR surfaceVelocity = XMVector3Cross(omega, r);
 
-    XMStoreFloat3(&out_contact.surfaceVelocity,surfaceVelocity);
+    XMStoreFloat3(&out_contact.surfaceVelocity, surfaceVelocity);
+
+    return true;
+}
+
+bool PBD::box_shape::collide(const PBDParticle& p, contact& out_contact) const
+{
+    using namespace DirectX;
+
+    XMVECTOR x = XMLoadFloat3(&p.position);
+
+    // 最近接点
+    DirectX::XMFLOAT3 halfExtent = MathHelper::Multiply(extent, 0.5f);
+    XMFLOAT3 worldMin = {
+    center.x - halfExtent.x,
+    center.y - halfExtent.y,
+    center.z - halfExtent.z
+    };
+
+    XMFLOAT3 worldMax = {
+        center.x + halfExtent.x,
+        center.y + halfExtent.y,
+        center.z + halfExtent.z
+    };
+
+
+    XMVECTOR bMin = XMLoadFloat3(&worldMin);
+    XMVECTOR bMax = XMLoadFloat3(&worldMax);
+
+    XMVECTOR closet = XMVectorClamp(x, bMin, bMax);
+
+    // 球中心⇒最近接点
+    XMVECTOR v = XMVectorSubtract(x, closet);
+    float dist = XMVectorGetX(XMVector3Length(v));
+
+    float phi = dist - p.radius;
+
+    // 衝突していない
+    if (phi >= 0.0f)
+        return false;
+
+    // 法線
+    XMVECTOR n;
+    if (dist > 1e-6f)
+    {
+        n = XMVectorScale(v, 1.0f / dist);
+    }
+    else
+    {
+        n = XMVectorSet(0, 1, 0, 0);
+    }
+
+    XMStoreFloat3(&out_contact.normal, n);
+
+    // めり込み量
+    out_contact.phi = phi;
+    out_contact.friction = 0.5f;
+
+    // 接触点
+    XMVECTOR contact_point = XMVectorSubtract(x, XMVectorScale(n, p.radius));
+
+    XMStoreFloat3(&out_contact.position, contact_point);
 
     return true;
 }

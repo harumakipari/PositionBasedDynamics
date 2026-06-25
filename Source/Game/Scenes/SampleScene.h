@@ -24,6 +24,7 @@
 #include "PBD/PbdParticleDebugRenderer.h"
 #include "PBD/PBDActor.h"
 
+class CubeActor;
 class SphereActor;
 
 class SampleScene : public SceneBase
@@ -70,17 +71,23 @@ private:
 
     std::unique_ptr<particle_debug_renderer> particle_debug_renderer;
 
-    bool constrain_rotation_to_y = false;
+    bool constrain_rotation_to_y = true;
+    float bodyScale = 1.0f;
+    float stiffness = 0.1f;
+    float deformationBlend = 0.2f;
 
-    DirectX::XMFLOAT3 center = { 0.0f,0.0f,0.0f };
-    DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.0f };    // Šp‘¬“x
+    DirectX::XMFLOAT3 center = { 2.2f,1.4f,0.0f };
+    DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.7f };    // Šp‘¬“x
     float radius = 1.0f;
     std::shared_ptr<SphereActor> sphereActor;
     int sphereIndex = 0;
 
     std::shared_ptr<SphereActor> sphereActor1;
-    DirectX::XMFLOAT3 center1 = { 0.0f,0.0f,0.0f };
-    DirectX::XMFLOAT3 angularVelocity1 = { 0.0f,0.0f,0.0f };    // Šp‘¬“x
+    DirectX::XMFLOAT3 center1 = { 0.6f,0.1f,0.0f };
+    DirectX::XMFLOAT3 angularVelocity1 = { 0.0f,0.0f,-0.7f };    // Šp‘¬“x
     float radius1 = 1.0f;
     int sphereIndex1 = 0;
+
+    std::shared_ptr<CubeActor> cubeActor;
+    int boxIndex = 0;
 };

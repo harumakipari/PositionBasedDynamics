@@ -277,9 +277,6 @@
     <ClCompile Include="Source\Game\Scenes\SampleScene.cpp">
       <Filter>Source\Game\Scenes</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Game\Scenes\GameScene.cpp">
-      <Filter>Source\Game\Scenes</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Game\SofyBody\SoftBody.cpp">
       <Filter>Source\Game\SofyBody</Filter>
     </ClCompile>
@@ -374,6 +371,9 @@
       <Filter>Source\PBD</Filter>
     </ClCompile>
     <ClCompile Include="Source\Game\SofyBody\SphereActor.cpp">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\SofyBody\CubeActor.cpp">
       <Filter>Source\Game\SofyBody</Filter>
     </ClCompile>
   </ItemGroup>
@@ -777,9 +777,6 @@
     <ClInclude Include="Source\Game\Scenes\SampleScene.h">
       <Filter>Source\Game\Scenes</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Game\Scenes\GameScene.h">
-      <Filter>Source\Game\Scenes</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Game\SofyBody\SoftBody.h">
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
@@ -919,6 +916,9 @@
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
     <ClInclude Include="Source\Game\SofyBody\SphereActor.h">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\SofyBody\CubeActor.h">
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
   </ItemGroup>
