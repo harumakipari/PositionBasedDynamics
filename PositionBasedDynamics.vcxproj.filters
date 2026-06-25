@@ -1297,6 +1297,9 @@
     <None Include="Shader\DeformableModel.hlsli">
       <Filter>Shader</Filter>
     </None>
+    <None Include="Shader\ParticleDebug.hlsli">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">

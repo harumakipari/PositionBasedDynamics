@@ -416,7 +416,7 @@ void deformable_model::create_and_upload_resources(ID3D11Device* device)
 		subresource_data.SysMemSlicePitch = 0;
 		hr = device->CreateBuffer(&buffer_desc, &subresource_data, buffers.emplace_back().GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-#if 1
+#if 0
 		indices.clear();
 #endif
 

@@ -2,6 +2,10 @@
 #include <directxmath.h>
 #include <cstdint>
 
+#include "VoxelVolume.h"
+
+enum class voxel_state;
+
 namespace PBD
 {
     // ------------------------------------------------------------
@@ -59,6 +63,9 @@ namespace PBD
 
          // 衝突レイヤー / グループマスク
         std::uint32_t phase{ 0 };
+
+        // voxel_state
+        voxel_state voxelState = voxel_state::unknown;
     };
 
 };

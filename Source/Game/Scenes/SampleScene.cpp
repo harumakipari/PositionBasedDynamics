@@ -62,7 +62,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
                 0.5f,   // deformation_blend
                 0.05f,  // radius
                 1.0f,   // total_mass
-                16);    // voxel_resolution
+                10);    // voxel_resolution
 
             auto& body = world.get_shape_matching_body(index);
 
@@ -95,9 +95,9 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
     int model_0 = static_cast<int>(deformable_models.size());
     //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/YarnEnemy.glb", 1.f/*scale_factor*/));
-    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/Car/red.glb", 0.5f/*scale_factor*/));
+    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/Car/red.glb", 0.5f/*scale_factor*/));
     //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./resources/pikachu.glb", 0.03f/*scale_factor*/));
-    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
+    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
     int index = spawn_deformable_actor(device, immediateContext, model_0, { -1, 2, 0 });
 
 #if 0

@@ -139,6 +139,27 @@ void rasterize_triangle(
 	max_y = std::min<int>(grid.ny - 1, max_y);
 	max_z = std::min<int>(grid.nz - 1, max_z);
 
+	
+	Logger::Log(std::format(
+		"tri min({},{},{}) max({},{},{}) ",
+		min_value.x, min_value.y, min_value.z,
+		max_value.x, max_value.y, max_value.z
+		));
+
+	Logger::Log(std::format(
+		"grid.origin({},{},{}) cell({}) nx,ny,nz({},{},{}) ",
+		grid.origin.x, grid.origin.y, grid.origin.z, grid.cell_size,
+		grid.nx, grid.ny, grid.nz
+	));
+
+	Logger::Log(std::format(
+		"voxel min({},{},{}) max({},{},{})  ",
+		min_x, min_y, min_z,
+		max_x, max_y, max_z
+	));
+
+
+
     // --------------------------------------------------------
     // AABB‚ÉŠÜ‚Ü‚ê‚éVoxel‚ðBoundary‰»
     // --------------------------------------------------------

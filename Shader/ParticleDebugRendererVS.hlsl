@@ -1,6 +1,15 @@
 #include "Constants.hlsli"
+#include "ParticleDebug.hlsli"
 
-float4 main(float3 position : POSITION) : SV_POSITION
+VS_OUT main(VS_IN input)
 {
-    return mul(float4(position, 1.0), viewProjection);
+    VS_OUT output;
+
+    output.position =
+        mul(float4(input.position, 1.0f),
+            viewProjection);
+
+    output.color = input.color;
+
+    return output;
 }
