@@ -170,17 +170,6 @@ namespace PBD
     class box_shape final : public CollisionShape
     {
     public:
-#if 0
-        box_shape(
-            DirectX::XMFLOAT3 min_corner,
-            DirectX::XMFLOAT3 max_corner,
-            std::uint32_t phase)
-            : CollisionShape(phase),
-            min_corner(min_corner),
-            max_corner(max_corner)
-        {
-        }
-#else
         box_shape(
             DirectX::XMFLOAT3 center,
             DirectX::XMFLOAT3 extent,
@@ -191,21 +180,14 @@ namespace PBD
             min_corner = MathHelper::Subtract(center, halfExtent);
             max_corner = MathHelper::Add(center, halfExtent);
         }
-#endif // 1
 
-
-        bool collide(
-            const PBDParticle& p,
-            contact& out_contact) const override;
+        bool collide(const PBDParticle& p, contact& out_contact) const override;
 
         DirectX::XMFLOAT3 min_corner = { 0,0,0 };
         DirectX::XMFLOAT3 max_corner = { 0,0,0 };
 
         DirectX::XMFLOAT3 center = { 0,0,0 };
         DirectX::XMFLOAT3 extent = { 1,1,1 };
-
+        DirectX::XMFLOAT3X3 rotation; // 3x3 回転行列（ワールド）
     };
-
-
-
 }

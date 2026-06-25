@@ -89,5 +89,7 @@ private:
     int sphereIndex1 = 0;
 
     std::shared_ptr<CubeActor> cubeActor;
+    std::shared_ptr<CubeActor> cubeActor1;
     int boxIndex = 0;
+    int boxIndex1 = 0;
 };

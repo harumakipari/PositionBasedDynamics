@@ -114,9 +114,9 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
     //sphereIndex1 = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
 
     boxIndex = world.spawn_collision_shape<PBD::box_shape>(DirectX::XMFLOAT3{ -1.5f,-1.5f,-1.5f }, DirectX::XMFLOAT3{ 1.5f,1.5f,1.5f }, 0x0001/*phase*/);
+    boxIndex1 = world.spawn_collision_shape<PBD::box_shape>(DirectX::XMFLOAT3{ -1.5f,-1.5f,-1.5f }, DirectX::XMFLOAT3{ 1.5f,1.5f,1.5f }, 0x0001/*phase*/);
 
     particle_debug_renderer = std::make_unique<class particle_debug_renderer>(device, world.particles.size());
-
 
     return true;
 }
@@ -170,8 +170,15 @@ void SampleScene::Update(float deltaTime)
     {
         box->center = cubeActor->GetPosition();
         box->extent = cubeActor->extent;
+        box->rotation = cubeActor->GetRotationMatrix3X3();
     }
-
+    auto& boxShape1 = world.get_collision_shape(boxIndex1);
+    if (auto* box = dynamic_cast<PBD::box_shape*>(&boxShape1))
+    {
+        box->center = cubeActor1->GetPosition();
+        box->extent = cubeActor1->extent;
+        box->rotation = cubeActor1->GetRotationMatrix3X3();
+    }
 
     // PBD
     auto& body = world.get_shape_matching_body(0);
@@ -489,6 +496,8 @@ void SampleScene::SetUpActors()
 
     Transform cubeTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     cubeActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor", cubeTr);
+    Transform cubeTr1(DirectX::XMFLOAT3{ 0.0f,6.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    cubeActor1 = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor1", cubeTr1);
 
     auto actor = GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("stage", stageTr);
     auto mesh = actor->AddComponent<StaticMeshComponent>("staticMeshComponent");

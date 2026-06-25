@@ -15,7 +15,9 @@ public:
 
     void DrawImGuiDetails() override;
 
-    DirectX::XMFLOAT3 extent = { 1.0f,1.0f,1.0f };
-private:
+    DirectX::XMFLOAT3X3 GetRotationMatrix3X3();
 
+    DirectX::XMFLOAT3 extent = { 3.0f,1.0f,3.0f };
+private:
+    float viewScale = 0.8f;
 };
