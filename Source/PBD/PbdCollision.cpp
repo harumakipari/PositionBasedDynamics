@@ -192,14 +192,20 @@ bool PBD::box_shape::collide(const PBDParticle& p, contact& out_contact) const
 {
     using namespace DirectX;
 
+    // 粒子中心
     XMVECTOR x = XMLoadFloat3(&p.position);
 
-    // 最近接点
-    DirectX::XMFLOAT3 halfExtent = MathHelper::Multiply(extent, 0.5f);
+    // Box の AABB（ワールド）
+    XMFLOAT3 halfExtent = {
+        extent.x * 0.5f,
+        extent.y * 0.5f,
+        extent.z * 0.5f
+    };
+
     XMFLOAT3 worldMin = {
-    center.x - halfExtent.x,
-    center.y - halfExtent.y,
-    center.z - halfExtent.z
+        center.x - halfExtent.x,
+        center.y - halfExtent.y,
+        center.z - halfExtent.z
     };
 
     XMFLOAT3 worldMax = {
@@ -208,41 +214,77 @@ bool PBD::box_shape::collide(const PBDParticle& p, contact& out_contact) const
         center.z + halfExtent.z
     };
 
-
     XMVECTOR bMin = XMLoadFloat3(&worldMin);
     XMVECTOR bMax = XMLoadFloat3(&worldMax);
 
-    XMVECTOR closet = XMVectorClamp(x, bMin, bMax);
+    // まずは通常の「外側から」の最近接点処理
+    XMVECTOR closest = XMVectorClamp(x, bMin, bMax);
 
-    // 球中心⇒最近接点
-    XMVECTOR v = XMVectorSubtract(x, closet);
+    XMVECTOR v = XMVectorSubtract(x, closest);
     float dist = XMVectorGetX(XMVector3Length(v));
 
     float phi = dist - p.radius;
 
-    // 衝突していない
-    if (phi >= 0.0f)
+    // ここで「外側から」の衝突を処理
+    if (phi < 0.0f && dist > 1e-6f)
+    {
+        XMVECTOR n = XMVectorScale(v, 1.0f / dist);
+
+        XMStoreFloat3(&out_contact.normal, n);
+        out_contact.phi = phi;
+        out_contact.friction = 0.5f;
+
+        XMVECTOR contact_point = XMVectorSubtract(x, XMVectorScale(n, p.radius));
+        XMStoreFloat3(&out_contact.position, contact_point);
+
+        return true;
+    }
+
+    // ここから「完全に内部にいる場合」の処理
+    // x が AABB の内部かどうか判定
+    XMFLOAT3 px = p.position;
+
+    bool inside =
+        (px.x > worldMin.x && px.x < worldMax.x) &&
+        (px.y > worldMin.y && px.y < worldMax.y) &&
+        (px.z > worldMin.z && px.z < worldMax.z);
+
+    if (!inside)
+    {
+        // 外側にいて、かつ最近接点でも当たっていない → 衝突なし
         return false;
+    }
+
+    // 内部にいるので、一番近い面を探す
+    float dx_min = px.x - worldMin.x;
+    float dx_max = worldMax.x - px.x;
+    float dy_min = px.y - worldMin.y;
+    float dy_max = worldMax.y - px.y;
+    float dz_min = px.z - worldMin.z;
+    float dz_max = worldMax.z - px.z;
+
+    float min_dist = dx_min;
+    XMFLOAT3 n = { -1.0f, 0.0f, 0.0f }; // 左面
+
+    if (dx_max < min_dist) { min_dist = dx_max; n = { 1.0f, 0.0f, 0.0f }; }
+    if (dy_min < min_dist) { min_dist = dy_min; n = { 0.0f,-1.0f, 0.0f }; }
+    if (dy_max < min_dist) { min_dist = dy_max; n = { 0.0f, 1.0f, 0.0f }; }
+    if (dz_min < min_dist) { min_dist = dz_min; n = { 0.0f, 0.0f,-1.0f }; }
+    if (dz_max < min_dist) { min_dist = dz_max; n = { 0.0f, 0.0f, 1.0f }; }
 
     // 法線
-    XMVECTOR n;
-    if (dist > 1e-6f)
-    {
-        n = XMVectorScale(v, 1.0f / dist);
-    }
-    else
-    {
-        n = XMVectorSet(0, 1, 0, 0);
-    }
+    out_contact.normal = n;
 
-    XMStoreFloat3(&out_contact.normal, n);
+    // めり込み量（負の値）
+    // 「粒子中心が面から min_dist だけ内側にいる」＋「半径ぶん」
+    out_contact.phi = -(min_dist + p.radius);
 
-    // めり込み量
-    out_contact.phi = phi;
     out_contact.friction = 0.5f;
 
-    // 接触点
-    XMVECTOR contact_point = XMVectorSubtract(x, XMVectorScale(n, p.radius));
+    // 接触点 = 粒子中心 - 法線 * 半径
+    XMVECTOR n_vec = XMLoadFloat3(&n);
+    XMVECTOR contact_point =
+        XMVectorSubtract(x, XMVectorScale(n_vec, p.radius));
 
     XMStoreFloat3(&out_contact.position, contact_point);
 
