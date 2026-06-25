@@ -170,7 +170,6 @@ bool PBD::sphere_shape::collide(
 
     XMStoreFloat3(&out_contact.position, contact_point);
 
-
     // --------------------------------------------------------
     // •\–Ê‘¬“x
     //

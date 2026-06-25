@@ -516,7 +516,11 @@ void deformable_model::create_and_upload_resources(ID3D11Device* device)
 			const std::filesystem::path path(filename);
 			ID3D11ShaderResourceView* shader_resource_view = NULL;
 			std::wstring filename{ path.parent_path().concat(L"/").wstring() + std::wstring(image.uri.begin(), image.uri.end()) };
-			hr = LoadTextureFromFile(device, filename.c_str(), &shader_resource_view, NULL);
+			bool exists = std::filesystem::exists(filename);
+
+			assert(exists);
+
+		    hr = LoadTextureFromFile(device, filename.c_str(), &shader_resource_view, NULL);
 			if (hr == S_OK)
 			{
 				texture_resource_views.emplace_back().Attach(shader_resource_view);

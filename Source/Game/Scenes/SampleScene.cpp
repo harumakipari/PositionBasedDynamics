@@ -88,25 +88,35 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
             return static_cast<int>(pbdActors.size() - 1);
 
 #endif // 0
-
         };
 
     ID3D11DeviceContext* immediateContext = Graphics::GetDeviceContext();
 
     int model_0 = static_cast<int>(deformable_models.size());
-    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/YarnEnemy.glb", 1.f/*scale_factor*/));
+    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/YarnEnemy.glb", 1.f/*scale_factor*/));
+    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/Car/red.glb", 0.5f/*scale_factor*/));
     //deformable_models.emplace_back(std::make_unique<class deformable_model>(device.Get(), "./resources/pikachu.glb", 0.03f/*scale_factor*/));
-    spawn_deformable_actor(device, immediateContext, model_0, { -1, 2, 0 });
-    spawn_deformable_actor(device, immediateContext, model_0, { 1, 2, 0 });
+    int index = spawn_deformable_actor(device, immediateContext, model_0, { -1, 2, 0 });
+
+#if 0
+    index= spawn_deformable_actor(device, immediateContext, model_0, { 1, 2, 0 });
 
     int model_1 = static_cast<int>(deformable_models.size());
     deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
-    spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
+    index= spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
+
+#endif // 0
 
     world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
-    world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
+    sphereIndex = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
+    sphereIndex1 = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
 
     particle_debug_renderer = std::make_unique<class particle_debug_renderer>(device, world.particles.size());
+
+    Transform stageTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    auto actor = GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("stage", stageTr);
+    auto mesh=actor->AddComponent<StaticMeshComponent>("staticMeshComponent");
+    mesh->SetModel("./Data/Models/Stage/Stage.gltf");
 
     return true;
 }
@@ -126,23 +136,33 @@ void SampleScene::Update(float deltaTime)
     CollisionSystem::DetectAndResolveCollisions();
     CollisionSystem::ApplyPushAll();
 
-    for (const auto& collision_shape : world.collision_shapes)
+    auto& sphereA = world.get_collision_shape(sphereIndex);
+    if (auto* sphere = dynamic_cast<PBD::sphere_shape*>(&sphereA))
     {
-        if (PBD::plane_shape* plane_shape = dynamic_cast<PBD::plane_shape*>(collision_shape.get()))
-        {
-        }
-        else if (PBD::sphere_shape* sphere_shape = dynamic_cast<PBD::sphere_shape*>(collision_shape.get()))
-        {
-            sphere_shape->center = center;
-            sphere_shape->radius = radius;
-            sphere_shape->angularVelocity = angularVelocity;
+        sphere->center = center;
+        sphere->radius = radius;
+        sphere->angularVelocity = angularVelocity;
 
-            sphereActor->SetPosition(sphere_shape->center);
-            DirectX::XMFLOAT3 angleDegree = sphereActor->GetEulerRotation();
-            angleDegree = MathHelper::Add(angleDegree, sphere_shape->angularVelocity);
-            sphereActor->SetEulerRotation(angleDegree);
-        }
+        sphereActor->SetPosition(sphere->center);
+        DirectX::XMFLOAT3 angleDegree = sphereActor->GetEulerRotation();
+        angleDegree = MathHelper::Add(angleDegree, sphere->angularVelocity);
+        sphereActor->SetEulerRotation(angleDegree);
     }
+
+    auto& sphereB = world.get_collision_shape(sphereIndex1);
+    if (auto* sphere = dynamic_cast<PBD::sphere_shape*>(&sphereB))
+    {
+        sphere->center = center1;
+        sphere->radius = radius1;
+        sphere->angularVelocity = angularVelocity1;
+
+        sphereActor1->SetPosition(sphere->center);
+        DirectX::XMFLOAT3 angleDegree = sphereActor1->GetEulerRotation();
+        angleDegree = MathHelper::Add(angleDegree, sphere->angularVelocity);
+        sphereActor1->SetEulerRotation(angleDegree);
+    }
+
+
     // PBD
     auto& body = world.get_shape_matching_body(0);
     if (enable_simulation && GetAsyncKeyState('R') & 0x8000)
@@ -151,7 +171,7 @@ void SampleScene::Update(float deltaTime)
         body.set_position(world.particles, { 0, 2, 0 });
         body.scale = 1.0f;
     }
-
+    body.constrain_rotation_to_y = constrain_rotation_to_y;
     if (enable_simulation && GetAsyncKeyState('T') & 0x8000)
     {
         body.set_position(world.particles, { 0, 2, 0 });
@@ -449,6 +469,7 @@ void SampleScene::SetUpActors()
 
     Transform sphereTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     sphereActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor", sphereTr);
+    sphereActor1 = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor1", sphereTr);
 
 
     cameraManager->SetDebugCamera(debugCameraActor);
@@ -469,6 +490,7 @@ void SampleScene::DrawGui()
     ImGui::Checkbox("show_particles", &show_particles);
     ImGui::Checkbox("enable_simulation", &enable_simulation);
     ImGui::Checkbox("show_wireframe", &show_wireframe);
+    ImGui::Checkbox("constrain_rotation_to_y", &constrain_rotation_to_y);
     // PBD
     auto& body = world.get_shape_matching_body(0);
     if (ImGui::Button("Reset"))
@@ -481,6 +503,9 @@ void SampleScene::DrawGui()
     ImGui::DragFloat3("center", &center.x, 0.1f);
     ImGui::DragFloat3("angularVelocity", &angularVelocity.x, 0.1f);
     ImGui::DragFloat("radius", &radius, 0.1f, 0.0f, 5.0f);
+    ImGui::DragFloat3("center1", &center1.x, 0.1f);
+    ImGui::DragFloat3("angularVelocity1", &angularVelocity1.x, 0.1f);
+    ImGui::DragFloat("radius1", &radius1, 0.1f, 0.0f, 5.0f);
 #if 0
     if (ImGui::Button("Button"))
     {

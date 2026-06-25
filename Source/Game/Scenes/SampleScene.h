@@ -70,11 +70,17 @@ private:
 
     std::unique_ptr<particle_debug_renderer> particle_debug_renderer;
 
+    bool constrain_rotation_to_y = false;
 
     DirectX::XMFLOAT3 center = { 0.0f,0.0f,0.0f };
     DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.0f };    // Šp‘¬“x
     float radius = 1.0f;
-
     std::shared_ptr<SphereActor> sphereActor;
+    int sphereIndex = 0;
 
+    std::shared_ptr<SphereActor> sphereActor1;
+    DirectX::XMFLOAT3 center1 = { 0.0f,0.0f,0.0f };
+    DirectX::XMFLOAT3 angularVelocity1 = { 0.0f,0.0f,0.0f };    // Šp‘¬“x
+    float radius1 = 1.0f;
+    int sphereIndex1 = 0;
 };

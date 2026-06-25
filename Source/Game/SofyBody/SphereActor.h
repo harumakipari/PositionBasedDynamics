@@ -14,4 +14,7 @@ public:
     void Update(float elapsedTime)override {}
 
     void DrawImGuiDetails() override;
+
+private:
+    DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.0f };    // Šp‘¬“x
 };
