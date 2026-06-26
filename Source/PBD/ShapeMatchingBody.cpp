@@ -102,6 +102,48 @@ namespace PBD
 	//   5. •ÏŒ`s—ñS
 	//   6. “Š‰e
 	// ------------------------------------------------------------
+#if 1
+	void ShapeMatchingBody::project(std::vector<PBDParticle>& particles)
+	{
+		const int begin = particle_range.offset;
+		const int end = begin + particle_range.count;
+		if (begin == end)
+			return;
+
+		using namespace DirectX;
+
+		// „‘Ì‚Ìp¨
+		XMVECTOR c = XMLoadFloat3(&rigid_position);
+		XMVECTOR q = XMLoadFloat4(&rigid_rotation_quat);
+		XMMATRIX R = XMMatrixRotationQuaternion(q);
+
+		previous_center_of_mass = center_of_mass;
+		XMStoreFloat4(&center_of_mass, c);
+
+		transform = R; // •`‰æ—p
+
+		// Rest Offset ‚ğ„‘Ìp¨‚É’Ç]‚³‚¹‚é‚¾‚¯
+		for (int i = begin, local = 0; i < end; ++i, ++local)
+		{
+			PBDParticle& p = particles[i];
+
+			if (p.inverse_mass == 0.0f)
+				continue;
+
+			XMVECTOR qi = XMLoadFloat4(&rest_offsets[local]);
+			qi = XMVectorScale(qi, scale);
+
+			XMVECTOR goal = c + XMVector3TransformNormal(qi, R);
+
+			XMVECTOR x = XMLoadFloat3(&p.position);
+			x = XMVectorLerp(x, goal, stiffness);
+
+			XMStoreFloat3(&p.position, x);
+		}
+	}
+
+
+#else
 	void ShapeMatchingBody::project(std::vector<PBDParticle>& particles)
 	{
 		const int begin = particle_range.offset;
@@ -216,6 +258,8 @@ namespace PBD
 			XMStoreFloat3(&p.position, x);
 		}
 	}
+#endif // 0
+
 
 	// -----------------------------------------------------------------------------
 	// dSŒvZ

@@ -17,7 +17,6 @@
 #include "Game/Actors/Stage/Stage.h"
 #include "Game/Actors/WaterSphere/MorphModel.h"
 
-
 #include "UI/Widgets/Widget.h"
 
 #include "PBD/PositionBasedDynamics.h"
@@ -26,6 +25,7 @@
 
 class CubeActor;
 class SphereActor;
+class CarActor;
 
 class SampleScene : public SceneBase
 {
@@ -46,6 +46,9 @@ public:
 
     //ÉVÅ[ÉìÇÃé©ìÆìoò^
     static inline Scene::Autoenrollment<SampleScene> _autoenrollment;
+
+private :
+    void HandleInput(float deltaTime);
 
 private:
     std::shared_ptr<Stage>  title;
@@ -92,4 +95,8 @@ private:
     std::shared_ptr<CubeActor> cubeActor1;
     int boxIndex = 0;
     int boxIndex1 = 0;
+    std::vector<int> boxIndices;
+
+    std::shared_ptr<CarActor> carActor;
+    int shapeMatchingBodyIndex = 0;
 };

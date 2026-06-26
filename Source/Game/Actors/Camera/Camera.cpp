@@ -25,6 +25,7 @@ void MainCamera::Update(float deltaTime)
             moveDir = movement->GetVelocity();
         }
     }
+#if 0
 
     // 右スティック
     XMFLOAT2 rightStick = InputSystem::GetRightStick();
@@ -33,14 +34,7 @@ void MainCamera::Update(float deltaTime)
     mainCameraComponent->AddYaw(rightStick.x * deltaTime * 2.0f);
     mainCameraComponent->AddPitch(-rightStick.y * deltaTime * 2.0f);
 
-    //const float limit = DirectX::XMConvertToRadians(80.0f);
-
-    //mainCameraComponent->pitch =
-    //    std::clamp(
-    //        mainCameraComponent->pitch,
-    //        -limit,
-    //        limit
-    //    );
+#endif // 0
 
     // Controller更新
     tpsController.Update(deltaTime);

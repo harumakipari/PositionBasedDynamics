@@ -315,6 +315,15 @@ public:
         }
 
         // SkeletalMesh forward Opaque 用
+        {// 色を返す　マルチレンダーターゲットではない
+            hr = CreatePsFromCSO(device, "./Data/Shaders/GltfMorphModelPS.cso", desc.pixelShader.ReleaseAndGetAddressOf());
+            _ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+            desc.blendState = BLEND_STATE::MULTIPLY_RENDER_TARGET_NONE;
+            AddPipeLineState("GltfMorphModelPS", desc);
+        }
+
+        // SkeletalMesh forward Opaque 用
         {
             hr = CreatePsFromCSO(device, "./Data/Shaders/DarkStagePlayerWeaponPS.cso", desc.pixelShader.ReleaseAndGetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));

@@ -6,7 +6,7 @@ class TPSCameraController
 public:
     TPSCameraComponent* camera = nullptr;
     std::weak_ptr<SceneComponent> target;
-    bool useRaycast = true; // 障害物の回避にレイキャストを使うかどうか
+    bool useRaycast = false; // 障害物の回避にレイキャストを使うかどうか
     void Update(float dt)
     {
         auto t = target.lock();

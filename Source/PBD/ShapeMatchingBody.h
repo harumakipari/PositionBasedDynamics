@@ -42,6 +42,11 @@ namespace PBD
         // Final transform (R or R*S)
         DirectX::XMMATRIX transform{ DirectX::XMMatrixIdentity() };
 
+        // çÑëÃÇÃâÒì]
+        DirectX::XMFLOAT4 rigid_rotation_quat;
+        DirectX::XMFLOAT3 rigid_position;
+
+
         // Solver parameters
         float stiffness{ 1.0f };
         float deformation_blend{ 0.2f };

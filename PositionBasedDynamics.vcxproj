@@ -312,6 +312,7 @@
     <ClCompile Include="Source\Game\Actors\WaterSphere\MorphModel.cpp" />
     <ClCompile Include="Source\Game\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Source\Game\Scenes\SampleScene.cpp" />
+    <ClCompile Include="Source\Game\SofyBody\CarActor.cpp" />
     <ClCompile Include="Source\Game\SofyBody\CubeActor.cpp" />
     <ClCompile Include="Source\Game\SofyBody\SoftBody.cpp" />
     <ClCompile Include="Source\Game\SofyBody\SphereActor.cpp" />
@@ -353,6 +354,7 @@
     <ClCompile Include="Source\PBD\PbdParticleDebugRenderer.cpp" />
     <ClCompile Include="Source\PBD\PbdSolver.cpp" />
     <ClCompile Include="Source\PBD\PbdWorld.cpp" />
+    <ClCompile Include="Source\PBD\RigidBody.cpp" />
     <ClCompile Include="Source\PBD\ShapeMatchingBody.cpp" />
     <ClCompile Include="Source\PBD\VoxelVolume.cpp" />
     <ClCompile Include="Source\pch.cpp">
@@ -472,6 +474,7 @@
     <ClInclude Include="Source\Game\Scenes\LoadingScene.h" />
     <ClInclude Include="Source\Game\Scenes\ModelScene.h" />
     <ClInclude Include="Source\Game\Scenes\SampleScene.h" />
+    <ClInclude Include="Source\Game\SofyBody\CarActor.h" />
     <ClInclude Include="Source\Game\SofyBody\CubeActor.h" />
     <ClInclude Include="Source\Game\SofyBody\PlaneActor.h" />
     <ClInclude Include="Source\Game\SofyBody\SoftBody.h" />
@@ -533,6 +536,7 @@
     <ClInclude Include="Source\PBD\PbdSolver.h" />
     <ClInclude Include="Source\PBD\PbdWorld.h" />
     <ClInclude Include="Source\PBD\PositionBasedDynamics.h" />
+    <ClInclude Include="Source\PBD\RigidBody.h" />
     <ClInclude Include="Source\PBD\ShapeMatchingBody.h" />
     <ClInclude Include="Source\PBD\VoxelVolume.h" />
     <ClInclude Include="Source\pch.h" />

@@ -177,14 +177,9 @@ float4 main(VS_OUT pin, bool isFrontFace : SV_IsFrontFace) : SV_TARGET0
 
     float fresnel = pow(1.0 - saturate(dot(N, V)), 3.0);
 
-    float3 baseColor = float3(0.2, 0.6, 0.9); // …F
-    float3 edgeColor = float3(0.8, 0.95, 1.0);
-    // ’†‰›‚ÍˆÃ‚­A‰‚¾‚¯–¾‚é‚¢
-    float3 color = lerp(baseColor, edgeColor, fresnel);
-
     // ­‚µˆÃ‚­‚·‚é
 
-    return float4(color, 1.0);
+    return float4(basecolorFactor.rgb, 1.0);
 
 
     //float4 gbuffer3Color = float4(diffuse + specular + emmisive, basecolorFactor.a) * basecolorFactor;

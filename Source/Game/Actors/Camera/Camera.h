@@ -90,6 +90,7 @@ public:
         Camera::Initialize(transform);
         tpsController.camera =
             static_cast<TPSCameraComponent*>(mainCameraComponent.get());
+        std::dynamic_pointer_cast<TPSCameraComponent>(mainCameraComponent)->distance = 20.0f;
     };
 
     void SetTarget(const std::shared_ptr<SceneComponent>& target)

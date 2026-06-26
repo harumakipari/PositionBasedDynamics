@@ -213,7 +213,8 @@ namespace PBD
 		}
 
 		// 5. Velocity 再構築 + damping
-		const float damping = 2.0f;
+		//const float damping = 2.0f;
+		const float damping = 0.5f;
 		const float damping_factor = std::exp(-damping * dt);
 
 		for (PBDParticle& p : world.particles)
