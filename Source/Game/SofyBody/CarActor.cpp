@@ -139,6 +139,7 @@ void CarActor::Initialize(const Transform& transform)
 void CarActor::Update(float elapsedTime)
 {
 #if 1
+#if 1 // こっちは90度ごとに
     using namespace DirectX;
 
     // --- 接地判定（前進できるかどうか） ---
@@ -161,61 +162,9 @@ void CarActor::Update(float elapsedTime)
         {
             rolling = true;
             rollingAngle = 0.0f;
-            rollingDirection = (left > 0) ? -1 : 1;
-
-            // --- 4 面の中心の高さを取得 ---
-            float yFront = frontCenterComponent->GetComponentLocation().y;
-            float yTop = topCenterComponent->GetComponentLocation().y;
-            float yBack = backCenterComponent->GetComponentLocation().y;
-            float yBottom = bottomCenterComponent->GetComponentLocation().y;
-
-            float minY = yFront;
-            int face = 0; // 0=前, 1=上, 2=後, 3=底
-
-            if (yTop < minY) { minY = yTop;    face = 1; }
-            if (yBack < minY) { minY = yBack;   face = 2; }
-            if (yBottom < minY) { minY = yBottom; face = 3; }
-
-            // ============================================================
-            //  ★ pivot 決定表（縦方向サイコロ回転）
-            //
-            //  前入力： 底 → 前 → 上 → 後 → 底 …
-            //  後入力： 底 → 後 → 上 → 前 → 底 …
-            // ============================================================
-
-            switch (face)
-            {
-            case 3: // 底面が下（普通の状態）
-                if (left > 0)
-                    rollingPivot = frontPivotBottomComponent->GetComponentLocation();
-                else
-                    rollingPivot = backPivotBottomComponent->GetComponentLocation();
-                break;
-
-            case 0: // 前面が下（前に倒れている）
-                if (left > 0)
-                    rollingPivot = frontPivotTopComponent->GetComponentLocation(); // 前→上へ
-                else
-                    rollingPivot = bottomCenterComponent->GetComponentLocation();  // 後→底へ
-                break;
-
-            case 1: // 上面が下（裏返っている）
-                if (left > 0)
-                    rollingPivot = backPivotTopComponent->GetComponentLocation();  // 前→後へ
-                else
-                    rollingPivot = frontPivotTopComponent->GetComponentLocation(); // 後→前へ
-                break;
-
-            case 2: // 後面が下（後ろに倒れている）
-                if (left > 0)
-                    rollingPivot = bottomCenterComponent->GetComponentLocation();  // 前→底へ
-                else
-                    rollingPivot = backPivotTopComponent->GetComponentLocation();  // 後→上へ
-                break;
-            }
-
-            rollingPivot.y = 0.0f;
-
+            rollingDirection = (left > 0) ? RollDirection::Backward : RollDirection::Forward;
+            rollState = RollState::Input;
+            UpdateRollingPivot();
         }
     }
 
@@ -244,10 +193,7 @@ void CarActor::Update(float elapsedTime)
         }
 
         // Quaternion作成
-        XMVECTOR q =
-            XMQuaternionRotationAxis(
-                XMVectorSet(1, 0, 0, 0),
-                angle);
+        XMVECTOR q = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), angle);
 
         // 姿勢更新
         Rotation = XMQuaternionMultiply(Rotation, q);
@@ -263,7 +209,7 @@ void CarActor::Update(float elapsedTime)
         Pos = XMVector3Rotate(Pos, q);
         Pos += Pivot;
 
-        XMStoreFloat3(&rigid.position, Pos);
+        DirectX::XMStoreFloat3(&rigid.position, Pos);
         SetPosition(rigid.position);
     }
 
@@ -285,20 +231,21 @@ void CarActor::Update(float elapsedTime)
     float drag = 4.0f;
     Velocity -= Velocity * drag * elapsedTime;
 
-    XMStoreFloat3(&rigid.linearVelocity, Velocity);
+    DirectX::XMStoreFloat3(&rigid.linearVelocity, Velocity);
     Pos += Velocity;
 
-    XMStoreFloat3(&rigid.position, Pos);
+    DirectX::XMStoreFloat3(&rigid.position, Pos);
     SetPosition(rigid.position);
 
     // wheelGround リセット
     for (bool& g : wheelGround)
         g = false;
+
+#endif // 0
 #else
     onGround = wheelGround[0] || wheelGround[1] || wheelGround[2] || wheelGround[3];
 
     using namespace DirectX;
-
     auto intent = inputComponent->GetIntent();
     float left = intent.leftMove.x;
 
@@ -364,6 +311,109 @@ void CarActor::Update(float elapsedTime)
         i = false;
 #endif // 0
 
+}
+
+
+// 基準点を更新する
+void CarActor::UpdateRollingPivot()
+{
+    // --- 4 面の中心の高さを取得 ---
+    float yFront = frontCenterComponent->GetComponentLocation().y;
+    float yTop = topCenterComponent->GetComponentLocation().y;
+    float yBack = backCenterComponent->GetComponentLocation().y;
+    float yBottom = bottomCenterComponent->GetComponentLocation().y;
+
+    float minY = yFront;
+    currentFace = Face::Front; // 0=前, 1=上, 2=後, 3=底
+
+    if (yTop < minY) { minY = yTop;    currentFace = Face::Top; }
+    if (yBack < minY) { minY = yBack;   currentFace = Face::Back; }
+    if (yBottom < minY) { minY = yBottom; currentFace = Face::Bottom; }
+
+    // ============================================================
+    //  ★ pivot 決定表（縦方向サイコロ回転）
+    //
+    //  前入力： 底 → 前 → 上 → 後 → 底 …
+    //  後入力： 底 → 後 → 上 → 前 → 底 …
+    // ============================================================
+    switch (currentFace)
+    {
+    case Face::Bottom: // 底面が下（普通の状態）
+        if (rollingDirection == RollDirection::Backward)
+            rollingPivot = frontPivotBottomComponent->GetComponentLocation();
+        else
+            rollingPivot = backPivotBottomComponent->GetComponentLocation();
+        break;
+
+    case Face::Front: // 前面が下（前に倒れている）
+        if (rollingDirection == RollDirection::Backward)
+            rollingPivot = frontPivotTopComponent->GetComponentLocation(); // 前→上へ
+        else
+            rollingPivot = bottomCenterComponent->GetComponentLocation();  // 後→底へ
+        break;
+
+    case Face::Top: // 上面が下（裏返っている）
+        if (rollingDirection == RollDirection::Backward)
+            rollingPivot = backPivotTopComponent->GetComponentLocation();  // 前→後へ
+        else
+            rollingPivot = frontPivotTopComponent->GetComponentLocation(); // 後→前へ
+        break;
+
+    case Face::Back: // 後面が下（後ろに倒れている）
+        if (rollingDirection == RollDirection::Backward)
+            rollingPivot = bottomCenterComponent->GetComponentLocation();  // 前→底へ
+        else
+            rollingPivot = backPivotTopComponent->GetComponentLocation();  // 後→上へ
+        break;
+    }
+    rollingPivot.y = 0.0f;
+}
+
+// 面を更新する
+void CarActor::AdvanceCurrentFace()
+{
+    if (rollingDirection == RollDirection::Forward)
+    {
+        switch (currentFace)
+        {
+        case Face::Bottom:
+            currentFace = Face::Front;
+            break;
+
+        case Face::Front:
+            currentFace = Face::Top;
+            break;
+
+        case Face::Top:
+            currentFace = Face::Back;
+            break;
+
+        case Face::Back:
+            currentFace = Face::Bottom;
+            break;
+        }
+    }
+    else
+    {
+        switch (currentFace)
+        {
+        case Face::Bottom:
+            currentFace = Face::Back;
+            break;
+
+        case Face::Back:
+            currentFace = Face::Top;
+            break;
+
+        case Face::Top:
+            currentFace = Face::Front;
+            break;
+
+        case Face::Front:
+            currentFace = Face::Bottom;
+            break;
+        }
+    }
 }
 
 void CarActor::DrawImGuiDetails()

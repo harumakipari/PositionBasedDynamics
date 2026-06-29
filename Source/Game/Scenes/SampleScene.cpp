@@ -50,7 +50,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
     auto spawn_deformable_actor =
         [&](ID3D11Device* device,
-            ID3D11DeviceContext* immediate_context,
+            ID3D11DeviceContext* immediateContext,
             int model_index,
             const DirectX::XMFLOAT3& position) -> int
         {
@@ -76,7 +76,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
             // --- Upload particle positions to GPU ---
             deformable_models[model_index]->update_vertex_buffer(
-                immediate_context,
+                immediateContext,
                 body.instance_index,
                 &(world.particles[body.particle_range.offset].position),
                 sizeof(PBD::PBDParticle));
