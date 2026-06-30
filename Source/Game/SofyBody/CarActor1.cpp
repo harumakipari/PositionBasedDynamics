@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "CarActor.h"
+#include "CarActor1.h"
 
 #include <magic_enum.hpp>
 
-void CarActor::Initialize(const Transform& transform)
+void CarActor1::Initialize(const Transform& transform)
 {
     rigid.position = transform.GetLocation();
     rigid.rotation = transform.GetRotation();
@@ -26,7 +26,7 @@ void CarActor::Initialize(const Transform& transform)
     boxComponent->SetBoxExtent(size);
     boxComponent->SetLayer(CollisionLayer::Car);
     boxComponent->SetResponseToLayer(CollisionLayer::Floor, CollisionComponent::CollisionResponse::Block);
-    boxComponent->SetCollisionOffsetY(size.y * 0.5f);
+    //boxComponent->SetCollisionOffsetY(size.y * 0.5f);
     boxComponent->Initialize();
 
     // 回転の基準点を追加
@@ -39,15 +39,6 @@ void CarActor::Initialize(const Transform& transform)
     frontPivotBottomComponent->overrideForwardPipelineName = "GltfMorphModelPS";
     frontPivotBottomComponent->overrideDeferredPipelineName = "GltfMorphModelPS";
 
-    // 後面の下
-    backPivotBottomComponent = AddComponent<SkeletalMeshComponent>("backPivotBottonComponent", parentName);
-    backPivotBottomComponent->SetModel("./Data/Models/Primitives/sphere.glb");
-    backPivotBottomComponent->SetRelativeLocationDirect({ 0.0f,0.0f,-size.z * 0.5f });
-    backPivotBottomComponent->SetRelativeScaleDirect({ 0.1f,0.1f,0.1f });
-    backPivotBottomComponent->renderPass = MeshComponent::MeshRenderPass::Forward;
-    backPivotBottomComponent->overrideForwardPipelineName = "GltfMorphModelPS";
-    backPivotBottomComponent->overrideDeferredPipelineName = "GltfMorphModelPS";
-
     // 前面の上
     frontPivotTopComponent = AddComponent<SkeletalMeshComponent>("frontPivotTopComponent", parentName);
     frontPivotTopComponent->SetModel("./Data/Models/Primitives/sphere.glb");
@@ -57,8 +48,14 @@ void CarActor::Initialize(const Transform& transform)
     frontPivotTopComponent->overrideForwardPipelineName = "GltfMorphModelPS";
     frontPivotTopComponent->overrideDeferredPipelineName = "GltfMorphModelPS";
 
-#if 0
-
+    // 後面の下
+    backPivotBottomComponent = AddComponent<SkeletalMeshComponent>("backPivotBottonComponent", parentName);
+    backPivotBottomComponent->SetModel("./Data/Models/Primitives/sphere.glb");
+    backPivotBottomComponent->SetRelativeLocationDirect({ 0.0f,0.0f,-size.z * 0.5f });
+    backPivotBottomComponent->SetRelativeScaleDirect({ 0.1f,0.1f,0.1f });
+    backPivotBottomComponent->renderPass = MeshComponent::MeshRenderPass::Forward;
+    backPivotBottomComponent->overrideForwardPipelineName = "GltfMorphModelPS";
+    backPivotBottomComponent->overrideDeferredPipelineName = "GltfMorphModelPS";
 
     // 後面の上
     backPivotTopComponent = AddComponent<SkeletalMeshComponent>("backPivotTopComponent", parentName);
@@ -105,8 +102,6 @@ void CarActor::Initialize(const Transform& transform)
     backCenterComponent->overrideForwardPipelineName = "GltfMorphModelPS";
     backCenterComponent->overrideDeferredPipelineName = "GltfMorphModelPS";
 
-
-#endif // 0
     // 入力用のコンポーネントを追加
     inputComponent = this->AddComponent<class InputComponent>("inputComponent", parentName);
 
@@ -145,194 +140,229 @@ void CarActor::Initialize(const Transform& transform)
     currentFace = Face::Bottom;
 }
 
-void CarActor::Update(float elapsedTime)
+void CarActor1::Update(float elapsedTime)
 {
+#if 1
+#if 1 // こっちは90度ごとに
     using namespace DirectX;
     // --- 接地判定（前進できるかどうか） ---
     onGround = wheelGround[0] || wheelGround[1] || wheelGround[2] || wheelGround[3];
 
     auto intent = inputComponent->GetIntent();
-    float rotateInput = intent.leftMove.x;   // ピッチ回転入力
+    float left = intent.leftMove.x;   // ピッチ回転入力
     float forward = intent.rightMove.x;  // 前後入力
-    const float rollingSpeed = DirectX::XMConvertToRadians(30.0f);
-    if (rotateInput > 0.0f)
-    {// 前に入力があったら
-        switch (currentFace)
-        {
-        case Face::Bottom:
-            if (rollingAngle >= 0)
-            {
-                rollingPivot = frontPivotBottomComponent->GetComponentLocation();
-                baseRotation = { 0,0,0,1 };
-            }
-            else if (rollingAngle < 0)
-            {
-                rollingPivot = backPivotBottomComponent->GetComponentLocation();
-                baseRotation = { 0,0,0,1 };
-            }
+
+    // --- 現在の回転を取得 ---
+    XMFLOAT4 rotation = rigid.rotation;
+    XMVECTOR Rotation = XMLoadFloat4(&rotation);
+
 #if 0
-            if (!rolling)
+    // ============================================================
+//  ★ サイコロ回転：回転開始時に pivot を決める
+// ============================================================
+    if (!rolling)
+    {
+        if (fabs(left) > 0.5f)
+        {
+            rolling = true;
+            rollingAngle = 0.0f;
+            rollingDirection = (left > 0) ? RollDirection::Backward : RollDirection::Forward;
+            rollState = RollState::Input;
+            UpdateRollingPivot();
+        }
+    }
+
+#endif // 0
+
+    // ============================================================
+    //  ★ サイコロ回転の実行（pivot は固定）
+    // ============================================================
+    //if (rolling)
+    {
+        float delta = rollingSpeed * elapsedTime;
+        float angle = 0.0f;
+        Logger::Log(
+            "State=" +
+            std::string(magic_enum::enum_name(rollState)) +
+            " Angle=" +
+            std::to_string(XMConvertToDegrees(rollingAngle))
+        );        switch (rollState)
+        {
+        case RollState::Input:
+
+            if (fabs(left) > 0.2f)
+            {
+                angle = delta * rollingDirection;
+                rollingAngle += delta;
+
+                //----------------------------------
+                // 入力中に90°到達
+                //----------------------------------
+                if (rollingAngle >= XM_PIDIV2)
+                {
+                    float over = rollingAngle - XM_PIDIV2;
+
+                    angle -= over * rollingDirection;
+
+                    // この90°を反映
+                    XMVECTOR q =
+                        XMQuaternionRotationAxis(
+                            XMVectorSet(1, 0, 0, 0),
+                            angle);
+
+                    Rotation =
+                        XMQuaternionMultiply(
+                            Rotation,
+                            q);
+
+                    XMStoreFloat4(&rigid.rotation, Rotation);
+                    SetQuaternionRotation(rigid.rotation);
+
+                    XMVECTOR Pos = XMLoadFloat3(&rigid.position);
+                    XMVECTOR Pivot = XMLoadFloat3(&rollingPivot);
+
+                    Pos -= Pivot;
+                    Pos = XMVector3Rotate(Pos, q);
+                    Pos += Pivot;
+
+                    XMStoreFloat3(&rigid.position, Pos);
+                    SetPosition(rigid.position);
+
+                    //----------------------------------
+                    // 面更新
+                    //----------------------------------
+                    AdvanceCurrentFace();
+
+                    UpdateRollingPivot();
+
+                    //----------------------------------
+                    // 次の90°開始
+                    //----------------------------------
+                    rollingAngle = 0.0f;
+
+                    break;
+                }
+            }
+            else
+            {
+
+                Logger::Log(
+                    "Release angle = " +
+                    std::to_string(DirectX::XMConvertToDegrees(rollingAngle)) +
+                    " Face = " +
+                    std::string(magic_enum::enum_name(currentFace))
+                );
+                if (currentFace == Face::Front ||
+                    currentFace == Face::Back)
+                {
+                    // Front/Backでは必ず次の安定面まで行く
+                    rollState = RollState::Finish;
+                }
+                else
+                {
+                    // Bottom/Topだけ45°で判定
+                    if (rollingAngle >= XM_PIDIV4)
+                        rollState = RollState::Finish;
+                    else
+                        rollState = RollState::Return;
+                }
+#endif // 0
+            }
+
+            break;
+        case RollState::Return:
+
+            angle = -delta * rollingDirection;
+
+            rollingAngle -= delta;
+
+            if (rollingAngle <= 0.0f)
+            {
+                float over = -rollingAngle;
+
+                angle += over * rollingDirection;
+
+                //rolling = false;
+                rollState = RollState::None;
+                rollingAngle = 0.0f;
+            }
+
+            break;
+        case RollState::Finish:
+            Logger::Log("Finish");
+            angle = delta * rollingDirection;
+
+            rollingAngle += delta;
+
+            if (rollingAngle >= XM_PIDIV2)
+            {
+                float over = rollingAngle - XM_PIDIV2;
+
+                angle -= over * rollingDirection;
+
+                AdvanceCurrentFace();
+                UpdateRollingPivot();
+
+                rollingAngle = 0.0f;
+
+                if (fabs(left) > 0.2f)
+                {
+                    rollState = RollState::Input;
+                }
+                else
+                {
+                    // Front,Backでは止まらない
+                    if (currentFace == Face::Front ||
+                        currentFace == Face::Back)
+                    {
+                        rollState = RollState::Finish;
+                        Logger::Log(U8("FaceがFrontとBackで止まっている"));
+                    }
+                    else
+                    {
+                        //rolling = false;
+                        rollState = RollState::None;
+                    }
+                }
+
+            }
+
+            break;
+        default:
+            if (fabs(left) > 0.5f)
             {
                 rolling = true;
                 rollingAngle = 0.0f;
-                previousRollingAngle = 0.0f;
+                rollingDirection = (left > 0) ? RollDirection::Backward : RollDirection::Forward;
+                rollState = RollState::Input;
+                UpdateRollingPivot();
             }
-            if (rolling)
-#endif // 0
-            {
-                // 回転の処理
-                rollingAngle += rollingSpeed * elapsedTime;
-                rollingAngle = MathHelper::ClampAngle(rollingAngle);
-                XMVECTOR base = XMLoadFloat4(&baseRotation);
-                XMVECTOR offset = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), rollingAngle);
-                XMVECTOR rotation = XMQuaternionMultiply(base, offset);
-                DirectX::XMStoreFloat4(&rigid.rotation, rotation);
-                // 位置の移動
-                float deltaAngle = rollingAngle - previousRollingAngle;
-                XMVECTOR q = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), deltaAngle);
-                XMVECTOR Pos = XMLoadFloat3(&rigid.position);
-                XMVECTOR Pivot = XMLoadFloat3(&rollingPivot);
-                Pos -= Pivot;
-                Pos = XMVector3Rotate(Pos, q);
-                Pos += Pivot;
-                DirectX::XMStoreFloat3(&rigid.position, Pos);
-                previousRollingAngle = rollingAngle;
-                Logger::Log("rollingAngle:" + std::to_string(DirectX::XMConvertToDegrees(rollingAngle)));
-            }
-            if (DirectX::XMConvertToDegrees(rollingAngle) >= 90)
-            {
-                currentFace = Face::Front;
-            }
-            break;
-        case Face::Front:
-            {
-                if (DirectX::XMConvertToDegrees(rollingAngle) >= 90)
-                {
-                    rollingPivot = frontPivotTopComponent->GetComponentLocation();
-                    baseRotation = { 0,0,0,1 };
-                }
-                // 回転の処理
-                rollingAngle += rollingSpeed * elapsedTime;
-                rollingAngle = MathHelper::ClampAngle(rollingAngle);
-                XMVECTOR base = XMLoadFloat4(&baseRotation);
-                XMVECTOR offset = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), rollingAngle);
-                XMVECTOR rotation = XMQuaternionMultiply(base, offset);
-                DirectX::XMStoreFloat4(&rigid.rotation, rotation);
-                // 位置の移動
-                float deltaAngle = rollingAngle - previousRollingAngle;
-                XMVECTOR q = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), deltaAngle);
-                XMVECTOR Pos = XMLoadFloat3(&rigid.position);
-                XMVECTOR Pivot = XMLoadFloat3(&rollingPivot);
-                Pos -= Pivot;
-                Pos = XMVector3Rotate(Pos, q);
-                Pos += Pivot;
-                DirectX::XMStoreFloat3(&rigid.position, Pos);
-                previousRollingAngle = rollingAngle;
-                Logger::Log("rollingAngle:" + std::to_string(DirectX::XMConvertToDegrees(rollingAngle)));
-                if (DirectX::XMConvertToDegrees(rollingAngle) < 90)
-                {
-                    currentFace = Face::Bottom;
-                }
-            }
-            break;
-        case Face::Top:
-            break;
-        case Face::Back:
             break;
         }
-    }
-    else if (rotateInput < 0.0f)
-    {
-        switch (currentFace)
-        {
-        case Face::Bottom:
-            if (rollingAngle >= 0)
-            {
-                rollingPivot = frontPivotBottomComponent->GetComponentLocation();
-                baseRotation = { 0,0,0,1 };
-            }
-            else if (rollingAngle < 0)
-            {
-                rollingPivot = backPivotBottomComponent->GetComponentLocation();
-                baseRotation = { 0,0,0,1 };
-            }
-            {
-                // 回転の処理
-                rollingAngle -= rollingSpeed * elapsedTime;
-                rollingAngle = MathHelper::ClampAngle(rollingAngle);
-                XMVECTOR base = XMLoadFloat4(&baseRotation);
-                XMVECTOR offset = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), rollingAngle);
-                XMVECTOR rotation = XMQuaternionMultiply(base, offset);
-                DirectX::XMStoreFloat4(&rigid.rotation, rotation);
-                // 位置の移動
-                float deltaAngle = rollingAngle - previousRollingAngle;
-                XMVECTOR q = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), deltaAngle);
-                XMVECTOR Pos = XMLoadFloat3(&rigid.position);
-                XMVECTOR Pivot = XMLoadFloat3(&rollingPivot);
-                Pos -= Pivot;
-                Pos = XMVector3Rotate(Pos, q);
-                Pos += Pivot;
-                DirectX::XMStoreFloat3(&rigid.position, Pos);
-                previousRollingAngle = rollingAngle;
-                Logger::Log("rollingAngle:" + std::to_string(DirectX::XMConvertToDegrees(rollingAngle)));
-            }
-            break;
-        case Face::Front:
-            break;
-        case Face::Top:
-            break;
-        case Face::Back:
-            break;
-        }
-    }
-    else
-    {// 入力がなかったら
-        rolling = false;
-        float rollingAngleDegree = DirectX::XMConvertToDegrees(rollingAngle);
-        if (90 < rollingAngleDegree && rollingAngleDegree < 180)
-        {
-            rollingAngle += rollingSpeed * elapsedTime;
-            rollingAngle = MathHelper::ClampAngle(rollingAngle);
-        }
-        else if (0 < rollingAngleDegree && rollingAngleDegree <= 90)
-        {
-            rollingAngle -= rollingSpeed * elapsedTime;
-            rollingAngle = MathHelper::ClampAngle(rollingAngle);
-        }
-        else if (-90 <= rollingAngleDegree && rollingAngleDegree < 0)
-        {
-            rollingAngle += rollingSpeed * elapsedTime;
-            rollingAngle = MathHelper::ClampAngle(rollingAngle);
-        }
-#if 0
-        else if (-180 <= rollingAngleDegree && rollingAngleDegree < -90)
-        {
-            rollingAngle -= rollingSpeed * elapsedTime;
-            rollingAngle = MathHelper::ClampAngle(rollingAngle);
-        }
-#endif // 0
+        // Quaternion作成
+        XMVECTOR q = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), angle);
 
-        // 角度
-        XMVECTOR base = XMLoadFloat4(&baseRotation);
-        XMVECTOR offset = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), rollingAngle);
-        XMVECTOR rotation = XMQuaternionMultiply(base, offset);
-        DirectX::XMStoreFloat4(&rigid.rotation, rotation);
+        // 姿勢更新
+        Rotation = XMQuaternionMultiply(Rotation, q);
 
-#if 0
-        // 位置の移動
-        float deltaAngle = rollingAngle - previousRollingAngle;
-        XMVECTOR q = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), deltaAngle);
+        XMStoreFloat4(&rigid.rotation, Rotation);
+        SetQuaternionRotation(rigid.rotation);
+
+        // Position更新
         XMVECTOR Pos = XMLoadFloat3(&rigid.position);
         XMVECTOR Pivot = XMLoadFloat3(&rollingPivot);
+
         Pos -= Pivot;
         Pos = XMVector3Rotate(Pos, q);
         Pos += Pivot;
+
         DirectX::XMStoreFloat3(&rigid.position, Pos);
-#endif // 0
-        previousRollingAngle = rollingAngle;
+        SetPosition(rigid.position);
     }
 
+    // ============================================================
     //  前進処理（地面に投影した forward）
+    // ============================================================
     XMVECTOR rotQ = XMLoadFloat4(&rigid.rotation);
     XMVECTOR forwardVec = XMVector3Rotate(XMVectorSet(0, 0, -1, 0), rotQ);
     forwardVec = XMVectorSetY(forwardVec, 0);
@@ -353,15 +383,85 @@ void CarActor::Update(float elapsedTime)
 
     DirectX::XMStoreFloat3(&rigid.position, Pos);
     SetPosition(rigid.position);
-    SetQuaternionRotation(rigid.rotation);
 
     // wheelGround リセット
     for (bool& g : wheelGround)
         g = false;
+
+#else
+    onGround = wheelGround[0] || wheelGround[1] || wheelGround[2] || wheelGround[3];
+
+    using namespace DirectX;
+    auto intent = inputComponent->GetIntent();
+    float left = intent.leftMove.x;
+
+    DirectX::XMFLOAT3 pivot = { 0.0f,0.0f,0.0f };
+
+
+
+    // 現在の回転を取得
+    DirectX::XMFLOAT4 rotation = rigid.rotation;
+    DirectX::XMVECTOR Rotation = DirectX::XMLoadFloat4(&rotation);
+
+    // X軸で回転（前に倒れる）
+    DirectX::XMVECTOR AddRotation = DirectX::XMQuaternionRotationAxis(DirectX::XMVectorSet(1, 0, 0, 0), left * elapsedTime * 2.0f);
+
+    // 合成
+    Rotation = DirectX::XMQuaternionMultiply(Rotation, AddRotation);
+
+    // 剛体に反映
+    DirectX::XMStoreFloat4(&rigid.rotation, Rotation);
+
+    // Actor の Transform にも反映
+    SetQuaternionRotation(rigid.rotation);
+
+    float forward = intent.rightMove.x; // 前後入力
+    //Logger::Log("left" + std::to_string(left) + "forward" + std::to_string(forward));
+    // 剛体の forward ベクトルを取得
+    DirectX::XMVECTOR rot = XMLoadFloat4(&rigid.rotation);
+    DirectX::XMVECTOR forwardVec = DirectX::XMVector3Rotate(
+        DirectX::XMVectorSet(0, 0, -1, 0), // モデルの前方向
+        rot);
+
+    forwardVec = XMVectorSetY(forwardVec, 0);
+    forwardVec = XMVector3Normalize(forwardVec);
+
+    // 前進速度を追加
+    DirectX::XMVECTOR Velocity = XMLoadFloat3(&rigid.linearVelocity);
+    DirectX::XMVECTOR Pos = DirectX::XMLoadFloat3(&rigid.position);
+    // --- 接地しているときだけ前進 ---
+    if (onGround)
+    {
+        Velocity += forwardVec * (forward * 1.0f * elapsedTime);
+    }
+    // --- 摩擦で減速 ---
+    float drag = 4.0f;
+    Velocity -= Velocity * drag * elapsedTime;
+    DirectX::XMStoreFloat3(&rigid.linearVelocity, Velocity);
+    // --- 位置更新 ---
+    Pos += Velocity;
+
+    XMStoreFloat3(&rigid.position, Pos);
+    SetPosition(rigid.position);
+
+
+#if 0
+    PBD::IntegrateRigidBody(rigid, elapsedTime);
+    PBD::SolvePlaneForRigidBody(rigid, 0.0f, 0.5f);
+
+    // 自動安定トルク（JerryCarsWorld の「起き上がろうとする」感じ）
+    ApplyUprightTorque(rigid, /*strength=*/2.0f, elapsedTime);
+
+#endif // 0
+    for (bool& i : wheelGround)
+        i = false;
+#endif // 0
+
 }
 
+
 // 基準点を更新する
-void CarActor::UpdateRollingPivot(bool toForward)
+void CarActor1::UpdateRollingPivot()
 {
 #if 0
     // --- 4 面の中心の高さを取得 ---
@@ -388,28 +488,28 @@ void CarActor::UpdateRollingPivot(bool toForward)
     switch (currentFace)
     {
     case Face::Bottom: // 底面が下（普通の状態）
-        if (!toForward)
+        if (rollingDirection == RollDirection::Backward)
             rollingPivot = frontPivotBottomComponent->GetComponentLocation();
         else
             rollingPivot = backPivotBottomComponent->GetComponentLocation();
         break;
 
     case Face::Front: // 前面が下（前に倒れている）
-        if (!toForward)
+        if (rollingDirection == RollDirection::Backward)
             rollingPivot = frontPivotTopComponent->GetComponentLocation(); // 前→上へ
         else
             rollingPivot = bottomCenterComponent->GetComponentLocation();  // 後→底へ
         break;
 
     case Face::Top: // 上面が下（裏返っている）
-        if (!toForward)
+        if (rollingDirection == RollDirection::Backward)
             rollingPivot = backPivotTopComponent->GetComponentLocation();  // 前→後へ
         else
             rollingPivot = frontPivotTopComponent->GetComponentLocation(); // 後→前へ
         break;
 
     case Face::Back: // 後面が下（後ろに倒れている）
-        if (!toForward)
+        if (rollingDirection == RollDirection::Backward)
             rollingPivot = bottomCenterComponent->GetComponentLocation();  // 前→底へ
         else
             rollingPivot = backPivotTopComponent->GetComponentLocation();  // 後→上へ
@@ -418,11 +518,12 @@ void CarActor::UpdateRollingPivot(bool toForward)
     rollingPivot.y = 0.0f;
 }
 
-// 面を更新する // 前方向かどうか
-void CarActor::AdvanceCurrentFace(bool toForward)
+// 面を更新する
+void CarActor1::AdvanceCurrentFace()
 {
-    if (toForward)
-    {// 前方向へ
+
+    if (rollingDirection != RollDirection::Forward)
+    {
         switch (currentFace)
         {
         case Face::Bottom:
@@ -443,7 +544,7 @@ void CarActor::AdvanceCurrentFace(bool toForward)
         }
     }
     else
-    {// 後ろ方向へ
+    {
         switch (currentFace)
         {
         case Face::Bottom:
@@ -468,9 +569,7 @@ void CarActor::AdvanceCurrentFace(bool toForward)
 
 }
 
-void CarActor::DrawImGuiDetails()
+void CarActor1::DrawImGuiDetails()
 {
-#ifdef USE_IMGUI
-    ImGui::DragFloat("rollingAngle", &rollingAngle, 0.01f);
-#endif
+
 }

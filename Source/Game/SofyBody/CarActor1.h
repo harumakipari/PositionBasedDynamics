@@ -5,7 +5,8 @@
 #include "Components/Controller/ControllerComponent.h"
 #include "PBD/RigidBody.h"
 
-class CarActor :public Actor
+
+class CarActor1 :public Actor
 {
     enum class Face :uint8_t
     {
@@ -33,7 +34,7 @@ class CarActor :public Actor
     };
     RollState rollState = RollState::None;
 public:
-    CarActor(const std::string& actorName) :Actor(actorName) {}
+    CarActor1(const std::string& actorName) :Actor(actorName) {}
 
     void Initialize(const Transform& transform)override;
 
@@ -47,10 +48,10 @@ public:
 
 private:
     // 基準点を更新する
-    void UpdateRollingPivot(bool toForward);
+    void UpdateRollingPivot();
 
     // 面を更新する
-    void AdvanceCurrentFace(bool toForward);
+    void AdvanceCurrentFace();
 
 private:
     PBD::RigidBody rigid;
@@ -74,10 +75,19 @@ private:
     std::shared_ptr<SkeletalMeshComponent> frontCenterComponent;    // 前面中心
     std::shared_ptr<SkeletalMeshComponent> backCenterComponent;     // 後面中心
 
-    float rollingAngle = 0.0f;      // 今の面から何度倒れているか radian
-    float previousRollingAngle = 0.0f;  // 前のフレームの角度
-    bool rolling = false;
+    float rollingAngle = 0.0f;
+    float rollingAngularVelocity = 0.0f;  // 角速度
+    // 次の面へ行くか戻るか決まったか
+    bool rollingCommitted = false;
 
-    DirectX::XMFLOAT3 rollingPivot;
-    DirectX::XMFLOAT4 baseRotation = { 0,0,0,1 };
+    float rollingAngularAccel = 4.0f;     // 入力による角加速度
+    float rollingFriction = 6.0f;         // 減衰
+    // 1秒で180°回るくらい
+    float rollingSpeed = DirectX::XM_PI;
+
+    bool rolling = false;
+    DirectX::XMFLOAT3 rollingPivot;// 今回の支点
+    float rollingProgress = 0.0f;      // 0～90°
+    DirectX::XMFLOAT3 rollingStartPosition;
+    DirectX::XMFLOAT4 rollingStartRotation;
 };

@@ -31,6 +31,7 @@
 #include "Game/SofyBody/PlaneActor.h"
 #include "Game/SofyBody/SphereActor.h"
 #include "Game/SofyBody/CarActor.h"
+#include "Game/SofyBody/GearActor.h"
 
 #include "Physics/CollisionSystem.h"
 #include "UI/UIManager.h"
@@ -103,7 +104,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
 
     // 車のアクターを生成する
-    Transform carTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    Transform carTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     carActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CarActor>("carActor", carTr);
     carActor->shapeMatchingBodyIndex = shapeMatchingBodyIndex;
 
@@ -115,7 +116,6 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
     index = spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
 
 #endif // 0
-
     world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
     //sphereIndex = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
     //sphereIndex1 = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
@@ -176,13 +176,9 @@ void SampleScene::Update(float deltaTime)
         }
     }
 #endif // 0
-
-
-
     Physics::Instance().Update(Time::UnscaledDeltaTime());
     CollisionSystem::DetectAndResolveCollisions();
     CollisionSystem::ApplyPushAll();
-
 #if 0
     auto& sphereA = world.get_collision_shape(sphereIndex);
     if (auto* sphere = dynamic_cast<PBD::sphere_shape*>(&sphereA))
@@ -264,7 +260,6 @@ void SampleScene::Update(float deltaTime)
             }
         }
     }
-
 #if 0
     // 5. 衝突後の粒子から「剛体の位置」を少しだけ追従させる
     {
@@ -272,7 +267,6 @@ void SampleScene::Update(float deltaTime)
         DirectX::XMStoreFloat3(&rb.position, c_after);
         // 回転も追従したければ、A から R を取って quaternion に戻す手もある
     }
-
 #endif // 0
 }
 
@@ -512,6 +506,8 @@ void SampleScene::SetUpActors()
     boxComponent->SetResponseToLayer(CollisionLayer::Car, CollisionComponent::CollisionResponse::Block);
     boxComponent->Initialize();
 
+    Transform gearTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    auto gearActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<GearActor>("GearActor", gearTr);
 
     cameraManager->SetDebugCamera(debugCameraActor);
 }

@@ -462,6 +462,24 @@ namespace MathHelper
         return ConvertQuaternion4X4ToEuler(rotation);
     }
 
+    inline float MoveToward(float current, float target, float maxDelta)
+    {
+        if (current < target)
+        {
+            current += maxDelta;
+            if (current > target)
+                current = target;
+        }
+        else if (current > target)
+        {
+            current -= maxDelta;
+            if (current < target)
+                current = target;
+        }
+
+        return current;
+    }
+
 }
 
 #endif //MATH_HELPER_H

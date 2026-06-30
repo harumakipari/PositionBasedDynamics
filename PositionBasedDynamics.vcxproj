@@ -313,7 +313,9 @@
     <ClCompile Include="Source\Game\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Source\Game\Scenes\SampleScene.cpp" />
     <ClCompile Include="Source\Game\SofyBody\CarActor.cpp" />
+    <ClCompile Include="Source\Game\SofyBody\CarActor1.cpp" />
     <ClCompile Include="Source\Game\SofyBody\CubeActor.cpp" />
+    <ClCompile Include="Source\Game\SofyBody\GearActor.cpp" />
     <ClCompile Include="Source\Game\SofyBody\SoftBody.cpp" />
     <ClCompile Include="Source\Game\SofyBody\SphereActor.cpp" />
     <ClCompile Include="Source\Game\State\StateMachine.cpp" />
@@ -475,7 +477,9 @@
     <ClInclude Include="Source\Game\Scenes\ModelScene.h" />
     <ClInclude Include="Source\Game\Scenes\SampleScene.h" />
     <ClInclude Include="Source\Game\SofyBody\CarActor.h" />
+    <ClInclude Include="Source\Game\SofyBody\CarActor1.h" />
     <ClInclude Include="Source\Game\SofyBody\CubeActor.h" />
+    <ClInclude Include="Source\Game\SofyBody\GearActor.h" />
     <ClInclude Include="Source\Game\SofyBody\PlaneActor.h" />
     <ClInclude Include="Source\Game\SofyBody\SoftBody.h" />
     <ClInclude Include="Source\Game\SofyBody\SphereActor.h" />

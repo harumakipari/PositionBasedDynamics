@@ -376,6 +376,18 @@
     <ClCompile Include="Source\Game\SofyBody\CubeActor.cpp">
       <Filter>Source\Game\SofyBody</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\SofyBody\CarActor.cpp">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PBD\RigidBody.cpp">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\SofyBody\CarActor1.cpp">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\SofyBody\GearActor.cpp">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\profiler.h">
@@ -919,6 +931,18 @@
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
     <ClInclude Include="Source\Game\SofyBody\CubeActor.h">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\SofyBody\CarActor.h">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PBD\RigidBody.h">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\SofyBody\CarActor1.h">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\SofyBody\GearActor.h">
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
   </ItemGroup>
