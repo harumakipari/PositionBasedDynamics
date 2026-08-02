@@ -1,5 +1,14 @@
 #include "GltfModel.hlsli"
 
+cbuffer DamageConstants : register(b12)
+{
+    float3 HitPosition;
+    float Radius;
+
+    float3 HitNormal;
+    float Strength;
+};
+
 VS_OUT main(VS_IN vin)
 {
     float sigma = vin.tangent.w;
@@ -27,17 +36,24 @@ VS_OUT main(VS_IN vin)
     
     //vout.position /= vout.position.w; // to ndc
     
-    
+#if 0
     vout.wPosition = mul(vin.position, world);
-    
+#else
+    float4 worldPos = mul(vin.position, world);
+    float d = distance(worldPos.xyz, HitPosition);
+    float w = saturate(1.0 - d / Radius);
+    w *= w;
+    worldPos.xyz += HitNormal * Strength * w;
+    vout.wPosition = worldPos;
+    vout.position = mul(worldPos, viewProjection);
+#endif
+
     vin.normal.w = 0;
     vout.wNormal.xyz = normalize(mul(vin.normal, world).xyz);
-    //vout.wNormal.xyz = normalize(mul(vin.normal,inverseTransposeWorld).xyz);
     vout.wNormal.w = 0;
     
     vin.tangent.w = 0;
     vout.wTangent.xyz = normalize(mul(vin.tangent, world).xyz);
-    //vout.wTangent.xyz = normalize(mul(vin.tangent, inverseTransposeWorld).xyz);
     vout.wTangent.w = sigma;
     
     vout.texcoord = vin.texcoord;

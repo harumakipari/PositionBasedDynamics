@@ -84,6 +84,10 @@ namespace PBD
 		// --------------------------------------------------------
 		DirectX::XMFLOAT3 normal;
 
+		
+	    DirectX::XMFLOAT3 contactPoint; // 接触点（ワールド座標）
+
+
 		// --------------------------------------------------------
 		// phi (constraint value)
 		//

@@ -23,12 +23,22 @@
 #include "PBD/PbdParticleDebugRenderer.h"
 #include "PBD/PBDActor.h"
 
+class PlaneActor;
+class GearActor;
 class CubeActor;
 class SphereActor;
 class CarActor;
 
 class SampleScene : public SceneBase
 {
+    struct DamageConstants
+    {
+        DirectX::XMFLOAT3 hitPosition{};
+        float radius = 1.0f;
+        DirectX::XMFLOAT3 hitNormal{};
+        float strength = 1.0f;
+    };
+
 public:
     bool Initialize(ID3D11Device* device, UINT64 width, UINT height, const std::unordered_map<std::string, std::string>& props) override;
 
@@ -47,15 +57,16 @@ public:
     //ÉVÅ[ÉìÇÃé©ìÆìoò^
     static inline Scene::Autoenrollment<SampleScene> _autoenrollment;
 
-private :
+    // PBDWorldÇéÊìæÇ∑ÇÈä÷êî
+    PBD::PBDWorld& GetPbdWorld() { return world; }
+private:
     void HandleInput(float deltaTime);
 
 private:
+    std::shared_ptr<ConstantBuffer<DamageConstants>> damageConstantBuffer;
+
     std::shared_ptr<Stage>  title;
-
     std::unique_ptr<MorphModel> morphModel;
-
-
 
     // PBD
     PBD::PBDWorld world;
@@ -79,15 +90,15 @@ private:
     float stiffness = 0.1f;
     float deformationBlend = 0.2f;
 
-    DirectX::XMFLOAT3 center = { 2.2f,1.4f,0.0f };
-    DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.7f };    // äpë¨ìx
+    DirectX::XMFLOAT3 center = { 0.0f,1.6f,-5.8f };
+    DirectX::XMFLOAT3 angularVelocity = { 0.0f,0.0f,0.0f };    // äpë¨ìx
     float radius = 1.0f;
     std::shared_ptr<SphereActor> sphereActor;
     int sphereIndex = 0;
 
     std::shared_ptr<SphereActor> sphereActor1;
-    DirectX::XMFLOAT3 center1 = { 0.6f,0.1f,0.0f };
-    DirectX::XMFLOAT3 angularVelocity1 = { 0.0f,0.0f,-0.7f };    // äpë¨ìx
+    DirectX::XMFLOAT3 center1 = { 0.0f,0.1f,-3.9f };
+    DirectX::XMFLOAT3 angularVelocity1 = { 0.0f,0.0f,0.0f };    // äpë¨ìx
     float radius1 = 1.0f;
     int sphereIndex1 = 0;
 
@@ -99,4 +110,14 @@ private:
 
     std::shared_ptr<CarActor> carActor;
     int shapeMatchingBodyIndex = 0;
+
+    int planeIndex = 0;
+    int frontPlaneIndex = 0;
+    int backPlaneIndex = 0;
+
+    std::shared_ptr<GearActor> gearActor;
+
+    std::shared_ptr<PlaneActor> planeActor;
+    std::shared_ptr<PlaneActor> frontPlaneActor;
+    std::shared_ptr<PlaneActor> backPlaneActor;
 };

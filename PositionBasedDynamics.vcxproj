@@ -312,6 +312,7 @@
     <ClCompile Include="Source\Game\Actors\WaterSphere\MorphModel.cpp" />
     <ClCompile Include="Source\Game\Scenes\LoadingScene.cpp" />
     <ClCompile Include="Source\Game\Scenes\SampleScene.cpp" />
+    <ClCompile Include="Source\Game\SofyBody\BeltConveyorActor.cpp" />
     <ClCompile Include="Source\Game\SofyBody\CarActor.cpp" />
     <ClCompile Include="Source\Game\SofyBody\CarActor1.cpp" />
     <ClCompile Include="Source\Game\SofyBody\CubeActor.cpp" />
@@ -476,6 +477,7 @@
     <ClInclude Include="Source\Game\Scenes\LoadingScene.h" />
     <ClInclude Include="Source\Game\Scenes\ModelScene.h" />
     <ClInclude Include="Source\Game\Scenes\SampleScene.h" />
+    <ClInclude Include="Source\Game\SofyBody\BeltConveyorActor.h" />
     <ClInclude Include="Source\Game\SofyBody\CarActor.h" />
     <ClInclude Include="Source\Game\SofyBody\CarActor1.h" />
     <ClInclude Include="Source\Game\SofyBody\CubeActor.h" />

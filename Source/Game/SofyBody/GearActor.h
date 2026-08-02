@@ -16,6 +16,10 @@ public:
 
     void DrawImGuiDetails() override;
 
+    std::vector<int> GetPbdBoxIndices() { return pbdBoxIndices; }
 private:
-    std::shared_ptr<SkeletalMeshComponent> skeletalMeshComponent; 
+    std::shared_ptr<SkeletalMeshComponent> skeletalMeshComponent;
+
+    std::vector<BoxComponent*> boxComponents;
+    std::vector<int> pbdBoxIndices;
 };

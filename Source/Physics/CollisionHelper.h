@@ -25,6 +25,7 @@ enum class CollisionLayer :uint32_t
     Item, // ƒAƒCƒeƒ€
     Car,
     CarWheel,
+    Gear,
     Max,
 };
 constexpr uint32_t COLLISION_EVERYTHING = 0xFFFFFFFF;

@@ -292,6 +292,8 @@ public:
         boxExtent_ = { extent.x * 0.5f,extent.y * 0.5f,extent.z * 0.5f };
     }
 
+    const DirectX::XMFLOAT3& GetBoxExtent() const { return boxExtent_; }
+
     AABB GetAABB()const override
     {
         AABB aabb{};
@@ -310,6 +312,7 @@ public:
         if (ImGui::TreeNode((name_ + "  box").c_str()))
         {
             ImGui::DragFloat3("boxExtent", &boxExtent_.x, 0.1f);
+            ResizeBox(boxExtent_.x, boxExtent_.y, boxExtent_.z);
             ImGui::TreePop();
         }
 #endif
@@ -501,7 +504,7 @@ public:
             capsuleAxisQ = { physx::PxPiDivTwo, physx::PxVec3(1.0f, 0.0f, 0.0f) };
             break;
         case ShapeComponent::CapsuleAxis::y:
-            capsuleAxisQ = {physx::PxPiDivTwo, physx::PxVec3(0.0f, 0.0f, 1.0f)};
+            capsuleAxisQ = { physx::PxPiDivTwo, physx::PxVec3(0.0f, 0.0f, 1.0f) };
             break;
         case ShapeComponent::CapsuleAxis::z:
             capsuleAxisQ = { physx::PxPiDivTwo, physx::PxVec3(0.0f, 1.0f, 0.0f) };

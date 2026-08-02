@@ -46,6 +46,7 @@ namespace PBD
 		// Projection時の位置補正方向として使用される。
 		// --------------------------------------------------------
 		cc.normal = c.normal;
+		cc.contactPoint = c.position;
 
 		// --------------------------------------------------------
 		// Signed Distance（符号付き距離）

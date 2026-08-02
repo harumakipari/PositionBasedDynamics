@@ -64,7 +64,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
                 0.5f,   // deformation_blend
                 0.05f,  // radius
                 1.0f,   // total_mass
-                1);    // voxel_resolution
+                16);    // voxel_resolution
 
             auto& body = world.get_shape_matching_body(index);
 
@@ -104,6 +104,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
 
     // 車のアクターを生成する
+    //Transform carTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     Transform carTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     carActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CarActor>("carActor", carTr);
     carActor->shapeMatchingBodyIndex = shapeMatchingBodyIndex;
@@ -116,14 +117,19 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
     index = spawn_deformable_actor(device, immediateContext, model_1, { 0, 2, 0 });
 
 #endif // 0
-    world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
-    //sphereIndex = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
-    //sphereIndex1 = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
+    planeIndex = world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
+    frontPlaneIndex = world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, -10.0f/*distance*/, 0x0001/*phase*/);
+    backPlaneIndex = world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, -10.0f/*distance*/, 0x0001/*phase*/);
+    //world.spawn_collision_shape<PBD::plane_shape>(DirectX::XMFLOAT3{ 0.0f, 1.0f, 0.0f }/*normal*/, 0.0f/*distance*/, 0x0001/*phase*/);
+    sphereIndex = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
+    sphereIndex1 = world.spawn_collision_shape<PBD::sphere_shape>(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f }/*center*/, 0.5f/*radius*/, 0x0001/*phase*/);
 
     boxIndex = world.spawn_collision_shape<PBD::box_shape>(DirectX::XMFLOAT3{ -1.5f,-1.5f,-1.5f }, DirectX::XMFLOAT3{ 1.5f,1.5f,1.5f }, 0x0001/*phase*/);
     boxIndex1 = world.spawn_collision_shape<PBD::box_shape>(DirectX::XMFLOAT3{ -1.5f,-1.5f,-1.5f }, DirectX::XMFLOAT3{ 1.5f,1.5f,1.5f }, 0x0001/*phase*/);
 
     particle_debug_renderer = std::make_unique<class particle_debug_renderer>(device, world.particles.size());
+
+    damageConstantBuffer = std::make_shared<ConstantBuffer<DamageConstants>>(device);
 
     return true;
 }
@@ -156,6 +162,45 @@ void SampleScene::Update(float deltaTime)
         box->extent = cubeActor1->extent;
         box->rotation = cubeActor1->GetRotationMatrix3X3();
     }
+
+    auto& plane = world.get_collision_shape(planeIndex);
+    if (auto* planeShape = dynamic_cast<PBD::plane_shape*>(&plane))
+    {
+        planeShape->distance = planeActor->GetPosition().y;
+        planeShape->normal = DirectX::XMFLOAT3{ 0.0f,1.0f,0.0f };
+    }
+
+    //damageConstantBuffer->data.hitPosition = center;
+    //damageConstantBuffer->data.radius = radius;
+
+    DebugRender::DrawSphere(damageConstantBuffer->data.hitPosition, damageConstantBuffer->data.radius, { 1,1,1,1 }, 0.0f, true);
+
+#if 0
+    auto& frontPlane = world.get_collision_shape(frontPlaneIndex);
+    if (auto* planeShape = dynamic_cast<PBD::plane_shape*>(&frontPlane))
+    {
+        planeShape->distance = frontPlaneActor->GetPosition().x;
+        XMVECTOR q = MathHelper::QuaternionFromTo(
+            XMVectorSet(0, 1, 0, 0),
+            XMLoadFloat3(&planeShape->normal));
+        XMFLOAT4 rotation;
+        XMStoreFloat4(&rotation, q);
+        frontPlaneActor->SetQuaternionRotation(rotation);
+    }
+    auto& backPlane = world.get_collision_shape(backPlaneIndex);
+    if (auto* planeShape = dynamic_cast<PBD::plane_shape*>(&backPlane))
+    {
+        planeShape->distance = backPlaneActor->GetPosition().x;
+        XMVECTOR q = MathHelper::QuaternionFromTo(
+            XMVectorSet(0, 1, 0, 0),
+            XMLoadFloat3(&planeShape->normal));
+        XMFLOAT4 rotation;
+        XMStoreFloat4(&rotation, q);
+        backPlaneActor->SetQuaternionRotation(rotation);
+    }
+#endif // 1
+
+
 #if 1
     // Box 衝突（複数あるなら全部チェック）
     for (int boxIndex : boxIndices)
@@ -171,15 +216,39 @@ void SampleScene::Update(float deltaTime)
                 box->rotation,
                 boxMin,
                 boxMax);
-
-            PBD::SolveBoxForRigidBody(carActor->GetRigidBody(), boxMin, boxMax, 0.5f);
+            if (carActor)
+                PBD::SolveBoxForRigidBody(carActor->GetRigidBody(), boxMin, boxMax, 0.5f);
         }
     }
+
+#if 0
+    // Box 衝突（複数あるなら全部チェック）
+    for (int boxIndex : gearActor->GetPbdBoxIndices())
+    {
+        auto& shape = world.get_collision_shape(boxIndex);
+        if (auto* box = dynamic_cast<PBD::box_shape*>(&shape))
+        {
+            DirectX::XMFLOAT3 boxMin, boxMax;
+
+            PBD::ComputeAABBFromOBB(
+                box->center,
+                box->extent,
+                box->rotation,
+                boxMin,
+                boxMax);
+            if (carActor)
+                PBD::SolveBoxForRigidBody(carActor->GetRigidBody(), boxMin, boxMax, 0.5f);
+        }
+    }
+
+#endif // 0
+
+
 #endif // 0
     Physics::Instance().Update(Time::UnscaledDeltaTime());
     CollisionSystem::DetectAndResolveCollisions();
     CollisionSystem::ApplyPushAll();
-#if 0
+#if 1
     auto& sphereA = world.get_collision_shape(sphereIndex);
     if (auto* sphere = dynamic_cast<PBD::sphere_shape*>(&sphereA))
     {
@@ -207,16 +276,16 @@ void SampleScene::Update(float deltaTime)
     }
 #endif // 0
 
-
-
-
     // CarActor と ShapeMatchingBody を紐付けてある前提
+#if 1
     auto& rb = carActor->GetRigidBody();
     auto& body = world.get_shape_matching_body(carActor->shapeMatchingBodyIndex);
 
     // 剛体の姿勢を ShapeMatchingBody にコピー
     body.rigid_position = rb.position;
     body.rigid_rotation_quat = rb.rotation;
+
+#endif // 0
 
     if (enable_simulation)
     {
@@ -260,7 +329,7 @@ void SampleScene::Update(float deltaTime)
             }
         }
     }
-#if 0
+#if 1
     // 5. 衝突後の粒子から「剛体の位置」を少しだけ追従させる
     {
         XMVECTOR c_after = body.compute_center_of_mass(world.particles);
@@ -276,8 +345,7 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
     imGuiGizmoBuffer->Clear(immediateContext);
     imGuiGizmoBuffer->Activate(immediateContext);
 #endif
-
-
+    damageConstantBuffer->Activate(immediateContext, 12);
 
     UpdateConstantBuffer(immediateContext, deltaTime);
     ViewConstants data = {};
@@ -403,7 +471,7 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
     if (useDrawDebug)
     {
         RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_BACK);
-        Physics::Instance().Render(data.view, data.projection, { lightManager->GetLightDirection().x,lightManager->GetLightDirection().y,lightManager->GetLightDirection().z });
+        //Physics::Instance().Render(data.view, data.projection, { lightManager->GetLightDirection().x,lightManager->GetLightDirection().y,lightManager->GetLightDirection().z });
         DebugRender::Render(immediateContext);
         RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::WIREFRAME_CULL_NONE);
         DebugRender::WiredRender(immediateContext);
@@ -471,17 +539,25 @@ void SampleScene::SetUpActors()
     auto targetActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("target", targetTr);
 
     mainCameraActor->SetTarget(targetActor->GetRootComponent());
+    mainCameraActor->GetCameraComponent()->SetYaw(DirectX::XMConvertToRadians(90.0f));
     SetActiveCamera(mainCameraActor);
     Logger::Log(U8("SampleSceneのカメラ設定される。"));
 
     Transform stageTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto stage = this->GetActorManager()->CreateAndRegisterActorWithTransform<PlaneActor>("PlaneActor", stageTr);
+    planeActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<PlaneActor>("PlaneActor", stageTr);
+
+    Transform backPlaneTr(DirectX::XMFLOAT3{ -3.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,90.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    backPlaneActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<PlaneActor>("backPlaneActor", backPlaneTr);
+    backPlaneActor->SetActive(false);
+    Transform frontPlaneTr(DirectX::XMFLOAT3{ 1.3f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,90.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    frontPlaneActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<PlaneActor>("frontPlaneActor", frontPlaneTr);
+    frontPlaneActor->SetActive(false);
 
     Transform debugCameraTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     auto debugCameraActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<DebugCamera>("debugCam", debugCameraTr);
 
     auto pauseActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Pause>("pauseActor");
-#if 0
+#if 1
 
     Transform sphereTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     sphereActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor", sphereTr);
@@ -489,14 +565,15 @@ void SampleScene::SetUpActors()
 
 #endif // 0
 
-    Transform cubeTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    Transform cubeTr(DirectX::XMFLOAT3{ 2.2f,0.4f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     cubeActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor", cubeTr);
-    Transform cubeTr1(DirectX::XMFLOAT3{ 0.0f,6.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    Transform cubeTr1(DirectX::XMFLOAT3{ -2.3f,0.4f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     cubeActor1 = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor1", cubeTr1);
 
     auto actor = GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("stage", stageTr);
-    auto mesh = actor->AddComponent<StaticMeshComponent>("staticMeshComponent");
-    mesh->SetModel("./Data/Models/Stage/Stage.gltf");
+    auto mesh = actor->AddComponent<SkeletalMeshComponent>("staticMeshComponent");
+    mesh->SetModel("./Data/Models/BeltConveyor/scene.gltf");
+    //mesh->SetModel("./Data/Models/Stage/Stage.gltf");
     auto boxComponent = actor->AddComponent<class BoxComponent>("boxComponent", "staticMeshComponent");
     boxComponent->SetHalfBoxExtent(DirectX::XMFLOAT3(80.0f, 0.2f, 80.0f));
     boxComponent->SetRelativeLocationDirect({ 0.0f,-0.1f,0.0f });
@@ -506,16 +583,18 @@ void SampleScene::SetUpActors()
     boxComponent->SetResponseToLayer(CollisionLayer::Car, CollisionComponent::CollisionResponse::Block);
     boxComponent->Initialize();
 
-    Transform gearTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    auto gearActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<GearActor>("GearActor", gearTr);
 
+#if 0
+    Transform gearTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    gearActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<GearActor>("GearActor", gearTr);
+#endif
     cameraManager->SetDebugCamera(debugCameraActor);
 }
 
 void SampleScene::HandleInput(float deltaTime)
 {
     // PBD
-#if 0
+#if 1
     auto& body = world.get_shape_matching_body(0);
     body.constrain_rotation_to_y = constrain_rotation_to_y;
     body.scale = bodyScale;
@@ -524,13 +603,14 @@ void SampleScene::HandleInput(float deltaTime)
 
     DirectX::XMVECTOR forward = body.transform.r[2];
     DirectX::XMVECTOR axis = body.transform.r[1];
+    float speed = 2.0f;
     if (enable_simulation && GetKeyState(VK_UP) & 0x8000)
     {
-        body.translate(world.particles, DirectX::XMVectorScale(forward, deltaTime));
+        body.translate(world.particles, DirectX::XMVectorScale(forward, deltaTime * speed));
     }
     if (enable_simulation && GetKeyState(VK_DOWN) & 0x8000)
     {
-        body.translate(world.particles, DirectX::XMVectorScale(forward, -deltaTime));
+        body.translate(world.particles, DirectX::XMVectorScale(forward, -deltaTime * speed));
     }
     if (enable_simulation && GetKeyState(VK_LEFT) & 0x8000)
     {
@@ -638,6 +718,25 @@ void SampleScene::DrawGui()
     ImGui::DragFloat("stiffness", &stiffness, 0.001f, 0.0001f, 1.0f, "%.4f");
     ImGui::DragFloat("deformation_blend", &deformationBlend, 0.001f, 0.0f, 1.0f, "%.4f");
     ImGui::SliderInt("solver_iterations", &solver->solver_iterations, 0, 30);
+
+    ImGui::DragFloat3("hitPosition", &damageConstantBuffer->data.hitPosition.x, 0.1f);
+    ImGui::DragFloat3("hitNormal", &damageConstantBuffer->data.hitNormal.x, 0.1f);
+    ImGui::DragFloat("radius", &damageConstantBuffer->data.radius, 0.1f);
+    ImGui::DragFloat("strength", &damageConstantBuffer->data.strength, 0.1f);
+
+
+    auto& plane = world.get_collision_shape(backPlaneIndex);
+    if (auto* planeShape = dynamic_cast<PBD::plane_shape*>(&plane))
+    {
+        ImGui::DragFloat3("backPlaneNormal", &planeShape->normal.x, 0.01f);
+    }
+    auto& frontPlane = world.get_collision_shape(frontPlaneIndex);
+    if (auto* planeShape = dynamic_cast<PBD::plane_shape*>(&frontPlane))
+    {
+        ImGui::DragFloat3("frontPlaneNormal", &planeShape->normal.x, 0.01f);
+    }
+
+
 
     // PBD
     auto& body = world.get_shape_matching_body(0);

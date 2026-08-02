@@ -415,6 +415,16 @@ namespace MathHelper
         return { a.x + b.x, a.y + b.y, a.z + b.z };
     }
 
+    inline DirectX::XMFLOAT3 Cross(const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b)
+    {
+        DirectX::XMVECTOR va = DirectX::XMLoadFloat3(&a);
+        DirectX::XMVECTOR vb = DirectX::XMLoadFloat3(&b);
+        DirectX::XMVECTOR vc = DirectX::XMVector3Cross(va, vb);
+        DirectX::XMFLOAT3 out;
+        DirectX::XMStoreFloat3(&out, vc);
+        return out;
+    }
+
 
     inline DirectX::XMVECTOR Load(const DirectX::XMFLOAT3& v)
     {
@@ -478,6 +488,36 @@ namespace MathHelper
         }
 
         return current;
+    }
+
+    inline DirectX::XMVECTOR QuaternionFromTo(DirectX::FXMVECTOR from,DirectX::FXMVECTOR to)
+    {
+        using namespace DirectX;
+
+        XMVECTOR f = XMVector3Normalize(from);
+        XMVECTOR t = XMVector3Normalize(to);
+
+        float dot = XMVectorGetX(XMVector3Dot(f, t));
+
+        if (dot > 0.9999f)
+            return XMQuaternionIdentity();
+
+        if (dot < -0.9999f)
+        {
+            XMVECTOR axis = XMVector3Cross(f, XMVectorSet(1, 0, 0, 0));
+
+            if (XMVectorGetX(XMVector3LengthSq(axis)) < 1e-6f)
+                axis = XMVector3Cross(f, XMVectorSet(0, 0, 1, 0));
+
+            axis = XMVector3Normalize(axis);
+
+            return XMQuaternionRotationAxis(axis, DirectX::XM_PI);
+        }
+
+        XMVECTOR axis = XMVector3Normalize(XMVector3Cross(f, t));
+        float angle = acosf(dot);
+
+        return XMQuaternionRotationAxis(axis, angle);
     }
 
 }

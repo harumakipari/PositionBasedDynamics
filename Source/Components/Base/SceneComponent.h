@@ -443,11 +443,14 @@ public:
     // このコンポーネントにアタッチされている全ての子コンポーネントたちの Transform を更新する
     void UpdateChildTransforms(UpdateTransformFlags updateTransformFlags = UpdateTransformFlags::None, TeleportType teleport = TeleportType::None);
 
-        // このコンポーネントの親からの相対的な Transform を返す
+    // このコンポーネントの親からの相対的な Transform を返す
     Transform GetRelativeTransform() const
     {
         return Transform(relativeLocation_, relativeRotation_, relativeScale_);
     }
+
+    // 回転のみを抽出した行列
+    DirectX::XMFLOAT3X3 GetRotationMatrix3X3()const;
 
 
 protected:

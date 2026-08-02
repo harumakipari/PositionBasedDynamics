@@ -52,6 +52,16 @@ private:
     // 面を更新する
     void AdvanceCurrentFace(bool toForward);
 
+    // 差分の角度で位置を更新する
+    void ApplyRollingDelta(float deltaAngle);
+
+    void StartRoll(bool toForward);
+    void StartAutoRoll(bool toForward);
+    void ApplyRollDelta(float deltaAngle);
+    void EndRoll(bool completed);
+
+
+    void ApplyRollDeltaImmediate(float deltaAngle);
 private:
     PBD::RigidBody rigid;
 
@@ -80,4 +90,10 @@ private:
 
     DirectX::XMFLOAT3 rollingPivot;
     DirectX::XMFLOAT4 baseRotation = { 0,0,0,1 };
+
+    float rollingAngularVelocity = 0.0f;
+
+    float rollTargetAngle = 0.0f;
+    bool rollToForward = true;
+    bool continueRollThroughSide = false;
 };

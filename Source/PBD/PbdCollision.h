@@ -66,7 +66,7 @@ namespace PBD
 
         float friction = 1.0f;// 摩擦係数
 
-        int feature_id = invalid_index;// 接触フィーチャID
+        int featureId = invalid_index;// 接触フィーチャID
     };
 
     // ------------------------------------------------------------
@@ -103,7 +103,20 @@ namespace PBD
             const PBDParticle& p,
             contact& out_contact) const = 0;
 
+        void BeginFrame()
+        {
+            accumulatedImpulse = { 0,0,0 };
+            accumulatedTorque = { 0,0,0 };
+        }
+
+        virtual void AddImpulse(const DirectX::XMFLOAT3& normal,
+            float correction,
+            const DirectX::XMFLOAT3& contactPoint){}
+
         std::uint32_t phase = 0;
+
+        DirectX::XMFLOAT3 accumulatedImpulse = {};; // 並進方向の衝撃
+        DirectX::XMFLOAT3 accumulatedTorque = {};;  // 回転方向の衝撃
     };
 
     // ------------------------------------------------------------
@@ -176,18 +189,18 @@ namespace PBD
             std::uint32_t phase)
             : CollisionShape(phase), center(center), extent(extent)
         {
-            DirectX::XMFLOAT3 halfExtent = { extent.x * 0.5f,extent.y * 0.5f,extent.z * 0.5f };
-            min_corner = MathHelper::Subtract(center, halfExtent);
-            max_corner = MathHelper::Add(center, halfExtent);
         }
 
         bool collide(const PBDParticle& p, contact& out_contact) const override;
 
-        DirectX::XMFLOAT3 min_corner = { 0,0,0 };
-        DirectX::XMFLOAT3 max_corner = { 0,0,0 };
+        void AddImpulse(
+            const DirectX::XMFLOAT3& normal,
+            float correction,
+            const DirectX::XMFLOAT3& contactPoint) override;
 
         DirectX::XMFLOAT3 center = { 0,0,0 };
         DirectX::XMFLOAT3 extent = { 1,1,1 };
         DirectX::XMFLOAT3X3 rotation; // 3x3 回転行列（ワールド）
+
     };
 }

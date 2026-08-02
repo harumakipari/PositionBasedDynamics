@@ -253,3 +253,18 @@ void SceneComponent::AddLocalRotation(const DirectX::XMFLOAT3& offset)
     // Transform更新フラグ
     componentToWorldTransformUpdate_ = false;
 }
+
+// 回転のみを抽出した行列
+DirectX::XMFLOAT3X3 SceneComponent::GetRotationMatrix3X3()const
+{
+    DirectX::XMFLOAT4 rotation = GetComponentRotation();
+
+    DirectX::XMVECTOR q = DirectX::XMLoadFloat4(&rotation);
+
+    DirectX::XMMATRIX rotMat = DirectX::XMMatrixRotationQuaternion(q);
+
+    DirectX::XMFLOAT3X3 result;
+    DirectX::XMStoreFloat3x3(&result, rotMat);
+
+    return result;
+}

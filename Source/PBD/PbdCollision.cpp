@@ -283,3 +283,13 @@ bool PBD::box_shape::collide(const PBDParticle& p, contact& out_contact) const
 
 
 
+void PBD::box_shape::AddImpulse(const DirectX::XMFLOAT3& normal, float correction, const DirectX::XMFLOAT3& contactPoint)
+{
+    auto impulse = MathHelper::Multiply(normal, correction);
+    accumulatedImpulse = MathHelper::Add(accumulatedImpulse, impulse);
+
+    auto r = MathHelper::Subtract(contactPoint, center);
+    accumulatedTorque = MathHelper::Add(accumulatedTorque, MathHelper::Cross(r, impulse));
+
+    Logger::Log(("accumulatedImpulse x:") + std::to_string(accumulatedImpulse.x) + ("y :") + std::to_string(accumulatedImpulse.y) + ("z :") + std::to_string(accumulatedImpulse.z));
+}

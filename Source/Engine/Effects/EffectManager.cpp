@@ -373,8 +373,8 @@ void EffectManager::EmitParticle(EffectHandle handle, const XMFLOAT3& pos, const
             {
                 Vector2 startSize = emitterData.visualData.startSize.GetRandom();
                 Vector2 endSize = emitterData.visualData.endSize.GetRandom();
-                //emitData.scale = DirectX::XMFLOAT4(startSize.x, startSize.y, endSize.x, endSize.y);
                 emitData.scale = DirectX::XMFLOAT4(startSize.x, startSize.y, endSize.x, endSize.y);
+                //emitData.scale = DirectX::XMFLOAT4(startSize.x, startSize.y, endSize.x, endSize.y);
                 CoreColor startColor = emitterData.visualData.startColor.GetRandom();
                 CoreColor endColor = emitterData.visualData.endColor.GetRandom();
                 emitData.startColor = startColor;

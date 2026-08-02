@@ -102,7 +102,7 @@ namespace PBD
 	//   5. •ÏŒ`s—ñS
 	//   6. “Š‰e
 	// ------------------------------------------------------------
-#if 1
+#if 0
 	void ShapeMatchingBody::project(std::vector<PBDParticle>& particles)
 	{
 		const int begin = particle_range.offset;

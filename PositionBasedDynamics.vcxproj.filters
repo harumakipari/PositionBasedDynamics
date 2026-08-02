@@ -388,6 +388,9 @@
     <ClCompile Include="Source\Game\SofyBody\GearActor.cpp">
       <Filter>Source\Game\SofyBody</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\SofyBody\BeltConveyorActor.cpp">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\profiler.h">
@@ -943,6 +946,9 @@
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
     <ClInclude Include="Source\Game\SofyBody\GearActor.h">
+      <Filter>Source\Game\SofyBody</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\SofyBody\BeltConveyorActor.h">
       <Filter>Source\Game\SofyBody</Filter>
     </ClInclude>
   </ItemGroup>
