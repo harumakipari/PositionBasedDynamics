@@ -150,10 +150,13 @@ void CarActor::Initialize(const Transform& transform)
     }
 
     currentFace = Face::Bottom;
+
+    rigid.position = transform.GetLocation();
 }
 
 void CarActor::Update(float elapsedTime)
 {
+    return;
 #if 1
     using namespace DirectX;
 

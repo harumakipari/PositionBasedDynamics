@@ -11,7 +11,7 @@ struct SceneLightConstants
 {
     DirectX::XMFLOAT4 lightDirection = { 0.722f, -0.38f, -0.0211f, 0.957f };// w:attenuation Rate
     DirectX::XMFLOAT4 lightColor = { 1.0f, 0.8f, 1.0f, 2.3f }; //w colorPower
-    float iblIntensity = 0.4f;
+    float iblIntensity = 3.0f;
     int directionalLightEnable = 1;// ïΩçsåıåπÇÃ on / off
     int pointLightEnable = 1;
     int pointLightCount = 80;

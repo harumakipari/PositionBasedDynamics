@@ -24,9 +24,9 @@
 //コンストラクタ：ウィンドウハンドルを受け取って初期化
 Framework::Framework(HWND hwnd, BOOL fullscreen) : hwnd(hwnd), fullscreenMode(fullscreen), windowedStyle(static_cast<DWORD>(GetWindowLongPtrW(hwnd, GWL_STYLE)))
 {
-    //#ifndef _DEBUG
+//#ifndef _DEBUG
     fullscreenMode = true;
-    //#endif
+//#endif
     Graphics::Initialize(hwnd, fullscreenMode);
     InputSystem::Initialize();
     RenderState::Initialize();
@@ -45,7 +45,7 @@ bool Framework::Initialize()
 {
     ////デバイス・デバイスコンテクスト・スワップチェーンの作成
     ID3D11Device* device = Graphics::GetDevice();
-    if (!device) 
+    if (!device)
     {
         assert("ModelComponent Error: device is null\n");
     }

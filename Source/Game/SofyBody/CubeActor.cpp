@@ -11,7 +11,6 @@ void CubeActor::Update(float elapsedTime)
 {
     DirectX::XMFLOAT3 viewExtent = MathHelper::Multiply(extent, viewScale);
     SetScale(viewExtent);
-
 }
 
 void CubeActor::DrawImGuiDetails()

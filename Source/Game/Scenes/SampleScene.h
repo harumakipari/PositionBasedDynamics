@@ -74,7 +74,7 @@ private:
 
     std::vector<std::unique_ptr<deformable_model>> deformable_models;
 
-    bool enable_simulation = false;
+    bool enable_simulation = true;
     float time_accumulator = 0.0f;
     const float physics_time_step = 1.0f / 30.0f;
 
@@ -86,7 +86,7 @@ private:
     std::unique_ptr<particle_debug_renderer> particle_debug_renderer;
 
     bool constrain_rotation_to_y = true;
-    float bodyScale = 1.0f;
+    float bodyScale = 1.95f;
     float stiffness = 0.1f;
     float deformationBlend = 0.2f;
 
@@ -120,4 +120,6 @@ private:
     std::shared_ptr<PlaneActor> planeActor;
     std::shared_ptr<PlaneActor> frontPlaneActor;
     std::shared_ptr<PlaneActor> backPlaneActor;
+
+    std::shared_ptr<CinemaCamera> cinemaCameraActor;
 };

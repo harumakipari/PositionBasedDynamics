@@ -17,7 +17,8 @@ public:
 
     DirectX::XMFLOAT3X3 GetRotationMatrix3X3();
 
-    DirectX::XMFLOAT3 extent = { 3.0f,1.0f,3.0f };
+    DirectX::XMFLOAT3 extent = { 10.0f,3.0f,10.0f };
+    //DirectX::XMFLOAT3 extent = { 3.0f,1.0f,3.0f };
 private:
     float viewScale = 0.8f;
 };

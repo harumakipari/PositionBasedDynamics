@@ -13,6 +13,7 @@ public:
     {
         std::shared_ptr<StaticMeshComponent> staticMeshComponent = this->AddComponent<StaticMeshComponent>("staticMeshComponent");
         staticMeshComponent->SetModel("./Data/Models/Primitives/Plane.glb", false,false);
+        staticMeshComponent->SetIsVisible(false);
     }
 
     void Update(float elapsedTime)override {}

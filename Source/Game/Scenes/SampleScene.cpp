@@ -12,6 +12,7 @@
 #include "Graphics/Core/RenderState.h"
 #include "Engine/Input/InputSystem.h"
 #include "Core/ActorManager.h"
+#include "Engine/Debug/SceneEditor.h"
 #include "Engine/Utility/Time.h"
 
 #include "Game/Actors/Camera/LoadingCamera.h"
@@ -20,13 +21,13 @@
 #include "Game/Actors/Stage/ElasticBuilding.h"
 #include "Game/Actors/Stage/Cloth.h"
 
-
 #include "Physics/Physics.h"
 #include "Game/DarkGame/DarkActors/DarkStage.h"
 #include "Game/DarkGame/DarkActors/DarkStageCandelabraActor.h"
 #include "Game/DarkGame/DarkActors/DarkStageChandelierActor.h"
 
 #include "Game/DarkGame/DarkActors/DarkEnemy/SkeletonWarriorEnemy.h"
+#include "Game/SofyBody/BeltConveyorActor.h"
 #include "Game/SofyBody/CubeActor.h"
 #include "Game/SofyBody/PlaneActor.h"
 #include "Game/SofyBody/SphereActor.h"
@@ -105,7 +106,7 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
     // 車のアクターを生成する
     //Transform carTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    Transform carTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    Transform carTr(DirectX::XMFLOAT3{ -3.0f,2.75f,4.3f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     carActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CarActor>("carActor", carTr);
     carActor->shapeMatchingBodyIndex = shapeMatchingBodyIndex;
 
@@ -136,6 +137,19 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
 
 void SampleScene::Start()
 {
+    // シーンプリセットを設定する
+    SceneEditor::LoadPresetList(); // 更新
+    std::string file = "newPreset.json";
+    static SceneState savedState;
+    SceneEditor::LoadSceneState("Data/Saves/ScenePresets/" + file, savedState);
+    savedState.ApplyScenePreset(Scene::GetCurrentScene());
+
+
+    cameraManager->ToggleCinematicCamera(this);
+    SceneEditor::LoadPresetList(); // 更新
+    SceneEditor::LoadSceneState("Data/Saves/ScenePresets/" + file, savedState);
+    savedState.Apply(Scene::GetCurrentScene());
+    // カメラを固定する
 
 
 }
@@ -158,9 +172,12 @@ void SampleScene::Update(float deltaTime)
     auto& boxShape1 = world.get_collision_shape(boxIndex1);
     if (auto* box = dynamic_cast<PBD::box_shape*>(&boxShape1))
     {
-        box->center = cubeActor1->GetPosition();
-        box->extent = cubeActor1->extent;
-        box->rotation = cubeActor1->GetRotationMatrix3X3();
+        if (cubeActor1)
+        {
+            box->center = cubeActor1->GetPosition();
+            box->extent = cubeActor1->extent;
+            box->rotation = cubeActor1->GetRotationMatrix3X3();
+        }
     }
 
     auto& plane = world.get_collision_shape(planeIndex);
@@ -248,7 +265,7 @@ void SampleScene::Update(float deltaTime)
     Physics::Instance().Update(Time::UnscaledDeltaTime());
     CollisionSystem::DetectAndResolveCollisions();
     CollisionSystem::ApplyPushAll();
-#if 1
+#if 0
     auto& sphereA = world.get_collision_shape(sphereIndex);
     if (auto* sphere = dynamic_cast<PBD::sphere_shape*>(&sphereA))
     {
@@ -276,15 +293,15 @@ void SampleScene::Update(float deltaTime)
     }
 #endif // 0
 
-    // CarActor と ShapeMatchingBody を紐付けてある前提
+    
 #if 1
+    // CarActor と ShapeMatchingBody を紐付けてある前提
     auto& rb = carActor->GetRigidBody();
     auto& body = world.get_shape_matching_body(carActor->shapeMatchingBodyIndex);
 
     // 剛体の姿勢を ShapeMatchingBody にコピー
     body.rigid_position = rb.position;
     body.rigid_rotation_quat = rb.rotation;
-
 #endif // 0
 
     if (enable_simulation)
@@ -543,7 +560,7 @@ void SampleScene::SetUpActors()
     SetActiveCamera(mainCameraActor);
     Logger::Log(U8("SampleSceneのカメラ設定される。"));
 
-    Transform stageTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    Transform stageTr(DirectX::XMFLOAT3{ 0.0f,1.225f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     planeActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<PlaneActor>("PlaneActor", stageTr);
 
     Transform backPlaneTr(DirectX::XMFLOAT3{ -3.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,90.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
@@ -556,32 +573,29 @@ void SampleScene::SetUpActors()
     Transform debugCameraTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     auto debugCameraActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<DebugCamera>("debugCam", debugCameraTr);
 
-    auto pauseActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<Pause>("pauseActor");
-#if 1
 
+    Transform cinemaCameraTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    cinemaCameraActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CinemaCamera>("cinemaCam", cinemaCameraTr);
+    cameraManager->SetCinematicCamera(cinemaCameraActor);
+
+
+#if 0
     Transform sphereTr(DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     sphereActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor", sphereTr);
     sphereActor1 = this->GetActorManager()->CreateAndRegisterActorWithTransform<SphereActor>("sphereActor1", sphereTr);
-
 #endif // 0
 
-    Transform cubeTr(DirectX::XMFLOAT3{ 2.2f,0.4f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    Transform cubeTr(DirectX::XMFLOAT3{ -2.5f,6.2f,4.5f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     cubeActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor", cubeTr);
-    Transform cubeTr1(DirectX::XMFLOAT3{ -2.3f,0.4f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
-    cubeActor1 = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor1", cubeTr1);
 
-    auto actor = GetActorManager()->CreateAndRegisterActorWithTransform<Actor>("stage", stageTr);
-    auto mesh = actor->AddComponent<SkeletalMeshComponent>("staticMeshComponent");
-    mesh->SetModel("./Data/Models/BeltConveyor/scene.gltf");
-    //mesh->SetModel("./Data/Models/Stage/Stage.gltf");
-    auto boxComponent = actor->AddComponent<class BoxComponent>("boxComponent", "staticMeshComponent");
-    boxComponent->SetHalfBoxExtent(DirectX::XMFLOAT3(80.0f, 0.2f, 80.0f));
-    boxComponent->SetRelativeLocationDirect({ 0.0f,-0.1f,0.0f });
-    boxComponent->SetStatic(true);
-    boxComponent->SetLayer(CollisionLayer::Floor);
-    boxComponent->SetResponseToLayer(CollisionLayer::CarWheel, CollisionComponent::CollisionResponse::Block);
-    boxComponent->SetResponseToLayer(CollisionLayer::Car, CollisionComponent::CollisionResponse::Block);
-    boxComponent->Initialize();
+
+    //Transform cubeTr(DirectX::XMFLOAT3{ 2.2f,0.4f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    //cubeActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor", cubeTr);
+    //Transform cubeTr1(DirectX::XMFLOAT3{ -2.3f,0.4f,0.0f }, DirectX::XMFLOAT4{ 0.0f,0.0f,0.0f,1.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    //cubeActor1 = this->GetActorManager()->CreateAndRegisterActorWithTransform<CubeActor>("cubeActor1", cubeTr1);
+
+    Transform beltConveyorTr(DirectX::XMFLOAT3{ -0.6f,-4.5f,0.0f }, DirectX::XMFLOAT3{ 0.0f,-180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
+    auto beltConveyorActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<BeltConveyorActor>("BeltConveyorActor", beltConveyorTr);
 
 
 #if 0
