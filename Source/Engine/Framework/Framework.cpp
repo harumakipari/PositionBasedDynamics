@@ -25,7 +25,7 @@
 Framework::Framework(HWND hwnd, BOOL fullscreen) : hwnd(hwnd), fullscreenMode(fullscreen), windowedStyle(static_cast<DWORD>(GetWindowLongPtrW(hwnd, GWL_STYLE)))
 {
 //#ifndef _DEBUG
-    fullscreenMode = true;
+    fullscreenMode = false;
 //#endif
     Graphics::Initialize(hwnd, fullscreenMode);
     InputSystem::Initialize();
@@ -129,7 +129,7 @@ bool Framework::Update(float deltaTime/*Elapsed seconds from last frame*/)
         Graphics::StylizeWindow(!Graphics::fullscreenMode);
     }
 
-#ifdef _DEBUG
+#ifdef USE_IMGUI
     if (InputSystem::GetInputState("F1", InputStateMask::Trigger))
     {// ImGui‚Ì—LŒø‰»ƒgƒOƒ‹
         enableImGui = !enableImGui;
@@ -219,18 +219,18 @@ void Framework::Render(float elapsed_time/*Elapsed seconds from last frame*/, bo
             ImGui::PopFont();
 
         }
-        ImGui::Begin("ImGUI");
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-#if 1
-        ImGui::Text("Video memory usage %d MB", Graphics::VideoMemoryUsage());
-#endif
-        ImGui::Text("ALT+ENTER to change window mode");
-        ImGui::Text("F1 ImGui on/off");
-        ImGui::Text("F6 MovieCamera");
-        ImGui::Text("F7 CinemaCamera");
-        ImGui::Text("F8 DebugCamera");
-
-        ImGui::End();
+//        ImGui::Begin("ImGUI");
+//        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+//#if 
+//        ImGui::Text("Video memory usage %d MB", Graphics::VideoMemoryUsage());
+//#endif
+//        ImGui::Text("ALT+ENTER to change window mode");
+//        ImGui::Text("F1 ImGui on/off");
+//        ImGui::Text("F6 MovieCamera");
+//        ImGui::Text("F7 CinemaCamera");
+//        ImGui::Text("F8 DebugCamera");
+//
+//        ImGui::End();
 #endif
 
 

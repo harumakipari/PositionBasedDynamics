@@ -45,13 +45,13 @@ extern ImWchar glyphRangesJapanese[];
 #include "Engine/Effects/CoreComputeParticleSystem.h"
 
 #ifndef _DEBUG
-CONST LONG SCREEN_WIDTH{ 1920 };
-CONST LONG SCREEN_HEIGHT{ 1080 };
+CONST LONG SCREEN_WIDTH{ 1280 };
+CONST LONG SCREEN_HEIGHT{ 720 };
 #else
 CONST LONG SCREEN_WIDTH{ 1280 };
 CONST LONG SCREEN_HEIGHT{ 720 };
 #endif
-CONST LPCWSTR APPLICATION_NAME{ L"X3DGP" };
+CONST LPCWSTR APPLICATION_NAME{ L"ShapeMatching" };
 
 class Framework
 {

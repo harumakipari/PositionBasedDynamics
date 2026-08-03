@@ -370,8 +370,8 @@ void SampleScene::Update(float deltaTime)
 void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
 {
 #ifdef USE_IMGUI
-    imGuiGizmoBuffer->Clear(immediateContext);
-    imGuiGizmoBuffer->Activate(immediateContext);
+    //imGuiGizmoBuffer->Clear(immediateContext);
+    //imGuiGizmoBuffer->Activate(immediateContext);
 #endif
     damageConstantBuffer->Activate(immediateContext, 12);
 
@@ -555,7 +555,7 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
         fullscreenQuad->Blit(immediateContext, shader_resource_views, 0, _countof(shader_resource_views), postEffectPs.Get());
     }
 #ifdef USE_IMGUI
-    imGuiGizmoBuffer->Deactivate(immediateContext);
+    //imGuiGizmoBuffer->Deactivate(immediateContext);
 #endif
 }
 
@@ -801,15 +801,15 @@ void SampleScene::DrawGui()
 {
 #ifdef USE_IMGUI
 #if 1
-    SceneBase::DrawGui();
+    //SceneBase::DrawGui();
     ImGui::Begin(U8("ShapeMatching"));
     ImGui::Checkbox(U8("パーティクル表示"), &show_particles);
     ImGui::Checkbox(U8("シミュレーション開始"), &enable_simulation);
     ImGui::Checkbox(U8("ワイヤーフレーム表示"), &show_wireframe);
     ImGui::DragFloat(U8("スケール"), &bodyScale, 0.01f, 0.01f, 10.0f, "%.4f");
-    ImGui::DragFloat(U8("剛性"), &stiffness, 0.001f, 0.0001f, 1.0f, "%.4f");
-    ImGui::DragFloat(U8("変形ブレンド"), &deformationBlend, 0.001f, 0.0f, 1.0f, "%.4f");
-    ImGui::SliderInt(U8("ソルバー反復回数"), &solver->solver_iterations, 0, 30);
+    ImGui::DragFloat(U8("剛性(形状を維持する強さ)"), &stiffness, 0.001f, 0.0001f, 1.0f, "%.4f");
+    ImGui::DragFloat(U8("変形ブレンド(変形量の反映度)"), &deformationBlend, 0.001f, 0.0f, 1.0f, "%.4f");
+    ImGui::SliderInt(U8("ソルバー(制約解決の反復回数)"), &solver->solver_iterations, 0, 30);
     if (ImGui::Button(U8("潰す")))
     {
         if (cubeActor)
@@ -832,14 +832,14 @@ void SampleScene::DrawGui()
     {
         BackCarMove();
     }
-    ImGui::DragFloat(U8("進む距離"), &carTargetDistance, 0.1f, 0.0f, 100.0f, "%.4f");
-    ImGui::DragFloat(U8("進む速度"), &carMoveSpeed, 0.1f, 0.0f, 100.0f, "%.4f");
+    //ImGui::DragFloat(U8("進む距離"), &carTargetDistance, 0.1f, 0.0f, 100.0f, "%.4f");
+    //ImGui::DragFloat(U8("進む速度"), &carMoveSpeed, 0.1f, 0.0f, 100.0f, "%.4f");
 
     if (ImGui::Button(U8("リセットする")))
     {
         auto& body = world.get_shape_matching_body(0);
         body.reset_to_rest_state(world.particles);
-        body.set_position(world.particles, { -1, 2, 0 });
+        body.set_position(world.particles, { -1, 4, 0 });
         body.rigid_rotation_quat = { 0,0,0,1 };
         bodyScale = 2.0f;
         stiffness = 0.1f;
@@ -848,7 +848,7 @@ void SampleScene::DrawGui()
 
         auto& body1 = world.get_shape_matching_body(1);
         body1.reset_to_rest_state(world.particles);
-        body1.set_position(world.particles, { -1, 2, -8 });
+        body1.set_position(world.particles, { -1, 4, -8 });
         //body1.rigid_rotation_quat = { 0,0,0,1 };
     }
     ImGui::Text(U8("F7でデバックカメラ切り替え"));
