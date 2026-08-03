@@ -20,9 +20,16 @@ public:
     // ’×‚·
     void Press();
 
-    DirectX::XMFLOAT3 extent = { 10.0f,3.0f,10.0f };
+    // ’×‚·‚Ì‚ðŽ~‚ß‚é
+    void StopPress();
+
+    //DirectX::XMFLOAT3 extent = { 10.0f,3.0f,10.0f };
+    DirectX::XMFLOAT3 extent = { 7.0f,3.0f,7.0f };
     //DirectX::XMFLOAT3 extent = { 3.0f,1.0f,3.0f };
 private:
+    std::shared_ptr<StaticMeshComponent> staticMeshComponent;
+
+
     float viewScale = 0.8f;
 
     enum class PressState

@@ -97,18 +97,21 @@ bool SampleScene::Initialize(ID3D11Device* device, UINT64 width, UINT height, co
     ID3D11DeviceContext* immediateContext = Graphics::GetDeviceContext();
 
     int model_0 = static_cast<int>(deformable_models.size());
-    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/YarnEnemy.glb", 1.f/*scale_factor*/));
     deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/Car/red.glb", 1.0f/*scale_factor*/));
-    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./resources/pikachu.glb", 0.03f/*scale_factor*/));
-    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
-    shapeMatchingBodyIndex = spawn_deformable_actor(device, immediateContext, model_0, { -1, 2, 0 });
+    shapeMatchingBodyCarIndex = spawn_deformable_actor(device, immediateContext, model_0, { -1, 2, 0 });
 
+    int model_1 = static_cast<int>(deformable_models.size());
+    deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/YarnEnemy.glb", 1.1f/*scale_factor*/));
+    shapeMatchingBodyCatIndex = spawn_deformable_actor(device, immediateContext, model_1, { -1, 2, -8 });
+
+    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./Data/Models/PBD/kirby_1.glb", 0.05f/*scale_factor*/));
+    //deformable_models.emplace_back(std::make_unique<class deformable_model>(device, "./resources/pikachu.glb", 0.03f/*scale_factor*/));
 
     // 車のアクターを生成する
     //Transform carTr(DirectX::XMFLOAT3{ -0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 0.0f,180.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     Transform carTr(DirectX::XMFLOAT3{ -3.0f,2.75f,4.3f }, DirectX::XMFLOAT3{ 0.0f,0.0f,0.0f }, DirectX::XMFLOAT3{ 1.0f,1.0f,1.0f });
     carActor = this->GetActorManager()->CreateAndRegisterActorWithTransform<CarActor>("carActor", carTr);
-    carActor->shapeMatchingBodyIndex = shapeMatchingBodyIndex;
+    carActor->shapeMatchingBodyIndex = shapeMatchingBodyCarIndex;
 
 #if 0
     index = spawn_deformable_actor(device, immediateContext, model_0, { 1, 2, 0 });
@@ -613,57 +616,125 @@ void SampleScene::SetUpActors()
     cameraManager->SetDebugCamera(debugCameraActor);
 }
 
+
+void SampleScene::StartCarMove()
+{
+    // すでに移動中なら開始し直さない
+    if (isCarMoving)
+        return;
+
+    isCarMoving = true;
+    carMoveDistance = 0.0f;
+
+    carDirection = 1;
+}
+
+void SampleScene::BackCarMove()
+{
+    // すでに移動中なら開始し直さない
+    if (isCarMoving)
+        return;
+
+    isCarMoving = true;
+    carMoveDistance = 0.0f;
+
+    carDirection = -1;
+}
+
+void SampleScene::UpdateCarMove(float deltaTime, int index)
+{
+    if (!isCarMoving)
+        return;
+
+    auto& body = world.get_shape_matching_body(index);
+
+    // 車の現在の前方向
+    //DirectX::XMVECTOR forward = body.transform.r[2];
+    DirectX::XMVECTOR forward = DirectX::XMVectorSet(0,0,1,0);
+    //forward = DirectX::XMVector3Normalize(forward);
+    forward = DirectX::XMVectorScale(forward, carDirection);
+
+    // 今回のフレームで進む距離
+    float moveDistance = carMoveSpeed * deltaTime;
+
+    // 目標距離を超えないようにする
+    const float remainingDistance = carTargetDistance - carMoveDistance;
+
+    if (moveDistance >= remainingDistance)
+    {
+        moveDistance = remainingDistance;
+        isCarMoving = false;
+    }
+
+    body.translate(
+        world.particles,
+        DirectX::XMVectorScale(forward, moveDistance)
+    );
+
+    carMoveDistance += moveDistance;
+}
+
+
 void SampleScene::HandleInput(float deltaTime)
 {
     // PBD
 #if 1
-    auto& body = world.get_shape_matching_body(0);
-    body.constrain_rotation_to_y = constrain_rotation_to_y;
-    body.scale = bodyScale;
-    body.deformation_blend = deformationBlend;
-    body.stiffness = stiffness;
+    for (int i = 0; i < pbdActors.size(); ++i)
+    {
+        auto& body = world.get_shape_matching_body(i);
+        body.constrain_rotation_to_y = constrain_rotation_to_y;
+        body.deformation_blend = deformationBlend;
+        body.stiffness = stiffness;
+        body.scale = bodyScale;
 
-    DirectX::XMVECTOR forward = body.transform.r[2];
-    DirectX::XMVECTOR axis = body.transform.r[1];
-    float speed = 2.0f;
-    if (enable_simulation && GetKeyState(VK_UP) & 0x8000)
-    {
-        body.translate(world.particles, DirectX::XMVectorScale(forward, deltaTime * speed));
+        DirectX::XMVECTOR forward = body.transform.r[2];
+        DirectX::XMVECTOR axis = body.transform.r[1];
+        float speed = 2.0f;
+
+        UpdateCarMove(deltaTime, i);
     }
-    if (enable_simulation && GetKeyState(VK_DOWN) & 0x8000)
-    {
-        body.translate(world.particles, DirectX::XMVectorScale(forward, -deltaTime * speed));
-    }
-    if (enable_simulation && GetKeyState(VK_LEFT) & 0x8000)
-    {
-        DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, -1.0f * deltaTime, 0);
-        body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
-    }
-    if (enable_simulation && GetKeyState(VK_RIGHT) & 0x8000)
-    {
-        DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, 1.0f * deltaTime, 0);
-        body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
-    }
-    if (enable_simulation && GetKeyState('I') & 0x8000)
-    {
-        DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, 0, -XMConvertToRadians(45.0f) * deltaTime);
-        body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
-    }
-    if (enable_simulation && GetKeyState('K') & 0x8000)
-    {
-        DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, 0, XMConvertToRadians(45.0f) * deltaTime);
-        body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
-    }
-    if (enable_simulation && GetKeyState('J') & 0x8000)
-    {
-        DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(-XMConvertToRadians(45.0f) * deltaTime, 0, 0);
-        body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
-    }
-    if (enable_simulation && GetKeyState('L') & 0x8000)
-    {
-        DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(XMConvertToRadians(45.0f) * deltaTime, 0, 0);
-        body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
-    }
+    //auto& body = world.get_shape_matching_body(0);
+
+
+    return;
+    //if (enable_simulation && GetKeyState(VK_UP) & 0x8000)
+    //{
+    //    body.translate(world.particles, DirectX::XMVectorScale(forward, deltaTime * speed));
+    //}
+    //if (enable_simulation && GetKeyState(VK_DOWN) & 0x8000)
+    //{
+    //    body.translate(world.particles, DirectX::XMVectorScale(forward, -deltaTime * speed));
+    //}
+    //if (enable_simulation && GetKeyState(VK_LEFT) & 0x8000)
+    //{
+    //    DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, -1.0f * deltaTime, 0);
+    //    body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
+    //}
+    //if (enable_simulation && GetKeyState(VK_RIGHT) & 0x8000)
+    //{
+    //    DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, 1.0f * deltaTime, 0);
+    //    body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
+    //}
+    //if (enable_simulation && GetKeyState('I') & 0x8000)
+    //{
+    //    DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, 0, -XMConvertToRadians(45.0f) * deltaTime);
+    //    body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
+    //}
+    //if (enable_simulation && GetKeyState('K') & 0x8000)
+    //{
+    //    DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(0, 0, XMConvertToRadians(45.0f) * deltaTime);
+    //    body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
+    //}
+    //if (enable_simulation && GetKeyState('J') & 0x8000)
+    //{
+    //    DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(-XMConvertToRadians(45.0f) * deltaTime, 0, 0);
+    //    body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
+    //}
+    //if (enable_simulation && GetKeyState('L') & 0x8000)
+    //{
+    //    DirectX::XMVECTOR rotation = DirectX::XMQuaternionRotationRollPitchYaw(XMConvertToRadians(45.0f) * deltaTime, 0, 0);
+    //    body.rotate(world.particles, rotation, body.compute_center_of_mass(world.particles));
+    //}
 #else
 
     // 剛体の forward を計算
@@ -746,16 +817,39 @@ void SampleScene::DrawGui()
             cubeActor->Press();
         }
     }
-    auto& body = world.get_shape_matching_body(0);
+    if (ImGui::Button(U8("止める")))
+    {
+        if (cubeActor)
+        {
+            cubeActor->StopPress();
+        }
+    }
+    if (ImGui::Button(U8("ベルトコンベアを進める")))
+    {
+        StartCarMove();
+    }
+    if (ImGui::Button(U8("ベルトコンベアを戻す")))
+    {
+        BackCarMove();
+    }
+    ImGui::DragFloat(U8("進む距離"), &carTargetDistance, 0.1f, 0.0f, 100.0f, "%.4f");
+    ImGui::DragFloat(U8("進む速度"), &carMoveSpeed, 0.1f, 0.0f, 100.0f, "%.4f");
+
     if (ImGui::Button(U8("リセットする")))
     {
+        auto& body = world.get_shape_matching_body(0);
         body.reset_to_rest_state(world.particles);
         body.set_position(world.particles, { -1, 2, 0 });
         body.rigid_rotation_quat = { 0,0,0,1 };
-        bodyScale = 1.95f;
+        bodyScale = 2.0f;
         stiffness = 0.1f;
         deformationBlend = 0.2f;
         solver->solver_iterations = 5;
+
+        auto& body1 = world.get_shape_matching_body(1);
+        body1.reset_to_rest_state(world.particles);
+        body1.set_position(world.particles, { -1, 2, -8 });
+        //body1.rigid_rotation_quat = { 0,0,0,1 };
     }
     ImGui::Text(U8("F7でデバックカメラ切り替え"));
     ImGui::End();

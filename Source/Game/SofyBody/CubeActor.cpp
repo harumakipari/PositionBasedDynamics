@@ -4,7 +4,7 @@
 void CubeActor::Initialize(const Transform& transform)
 {
     std::string parentName = "CubeActorRootComponent";
-    std::shared_ptr<StaticMeshComponent> staticMeshComponent = this->AddComponent<StaticMeshComponent>(parentName);
+    staticMeshComponent = this->AddComponent<StaticMeshComponent>(parentName);
     staticMeshComponent->SetModel("./Data/Models/cube.glb", false, false);
     staticMeshComponent->SetIsVisible(false);
     std::shared_ptr<StaticMeshComponent> pressMeshComponent = this->AddComponent<StaticMeshComponent>("pressMesh", parentName);
@@ -19,6 +19,7 @@ void CubeActor::Update(float elapsedTime)
     DirectX::XMFLOAT3 pos = GetPosition();
     pos.x = -0.9f;
     pos.z = -0.4f;
+    //staticMeshComponent->SetRelativeScaleDirect(viewExtent);
 
     // 7.6f -> 4.3f
     switch (pressState)
@@ -91,6 +92,17 @@ void CubeActor::Update(float elapsedTime)
     }
     }
 
+    SetPosition(pos);
+}
+
+void CubeActor::StopPress()
+{
+    pressState = PressState::Idle;
+
+    waitTimer = 0.0f;
+
+    DirectX::XMFLOAT3 pos = GetPosition();
+    pos.y = topY;
     SetPosition(pos);
 }
 

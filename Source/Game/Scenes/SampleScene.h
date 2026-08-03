@@ -62,6 +62,11 @@ public:
 private:
     void HandleInput(float deltaTime);
 
+    void StartCarMove();
+
+    void BackCarMove();
+
+    void UpdateCarMove(float deltaTime,int index);
 private:
     std::shared_ptr<ConstantBuffer<DamageConstants>> damageConstantBuffer;
 
@@ -86,7 +91,7 @@ private:
     std::unique_ptr<particle_debug_renderer> particle_debug_renderer;
 
     bool constrain_rotation_to_y = true;
-    float bodyScale = 1.95f;
+    float bodyScale = 2.0f;
     float stiffness = 0.1f;
     float deformationBlend = 0.2f;
 
@@ -109,7 +114,8 @@ private:
     std::vector<int> boxIndices;
 
     std::shared_ptr<CarActor> carActor;
-    int shapeMatchingBodyIndex = 0;
+    int shapeMatchingBodyCarIndex = 0;
+    int shapeMatchingBodyCatIndex = 0;
 
     int planeIndex = 0;
     int frontPlaneIndex = 0;
@@ -123,7 +129,11 @@ private:
 
     std::shared_ptr<CinemaCamera> cinemaCameraActor;
 
+    bool isCarMoving = false;
 
-
+    float carMoveDistance = 0.0f;        // 現在までに進んだ距離
+    float carTargetDistance = 15.0f;      // 前進させる距離
+    float carMoveSpeed = 5.4f;           // 前進速度
+    int carDirection = 1;  // 車を進める方向
 
 };
