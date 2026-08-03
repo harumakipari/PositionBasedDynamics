@@ -150,7 +150,7 @@ void SampleScene::Start()
     SceneEditor::LoadSceneState("Data/Saves/ScenePresets/" + file, savedState);
     savedState.Apply(Scene::GetCurrentScene());
     // カメラを固定する
-
+    cinemaCameraActor->SetUseDebugMode(false);
 
 }
 
@@ -161,6 +161,14 @@ void SampleScene::Update(float deltaTime)
     HandleInput(deltaTime);
 
     SceneBase::Update(deltaTime);
+
+    if (InputSystem::GetInputState("F7", InputStateMask::Trigger))
+    {// シネマカメラとゲームカメラの切り替え
+        static bool frag = true;
+        frag = !frag;
+        cinemaCameraActor->SetUseDebugMode(frag);
+    }
+
 
     auto& boxShape = world.get_collision_shape(boxIndex);
     if (auto* box = dynamic_cast<PBD::box_shape*>(&boxShape))
@@ -293,7 +301,7 @@ void SampleScene::Update(float deltaTime)
     }
 #endif // 0
 
-    
+
 #if 1
     // CarActor と ShapeMatchingBody を紐付けてある前提
     auto& rb = carActor->GetRigidBody();
@@ -489,9 +497,9 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
     {
         RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::SOLID_CULL_BACK);
         //Physics::Instance().Render(data.view, data.projection, { lightManager->GetLightDirection().x,lightManager->GetLightDirection().y,lightManager->GetLightDirection().z });
-        DebugRender::Render(immediateContext);
+        //DebugRender::Render(immediateContext);
         RenderState::BindRasterizerState(immediateContext, RASTERIZE_STATE::WIREFRAME_CULL_NONE);
-        DebugRender::WiredRender(immediateContext);
+        //DebugRender::WiredRender(immediateContext);
         ExecuteHooks(RenderPass::Debug, immediateContext);
     }
 #endif
@@ -721,7 +729,37 @@ bool SampleScene::Uninitialize(ID3D11Device* device)
 void SampleScene::DrawGui()
 {
 #ifdef USE_IMGUI
-
+#if 1
+    SceneBase::DrawGui();
+    ImGui::Begin(U8("ShapeMatching"));
+    ImGui::Checkbox(U8("パーティクル表示"), &show_particles);
+    ImGui::Checkbox(U8("シミュレーション開始"), &enable_simulation);
+    ImGui::Checkbox(U8("ワイヤーフレーム表示"), &show_wireframe);
+    ImGui::DragFloat(U8("スケール"), &bodyScale, 0.01f, 0.01f, 10.0f, "%.4f");
+    ImGui::DragFloat(U8("剛性"), &stiffness, 0.001f, 0.0001f, 1.0f, "%.4f");
+    ImGui::DragFloat(U8("変形ブレンド"), &deformationBlend, 0.001f, 0.0f, 1.0f, "%.4f");
+    ImGui::SliderInt(U8("ソルバー反復回数"), &solver->solver_iterations, 0, 30);
+    if (ImGui::Button(U8("潰す")))
+    {
+        if (cubeActor)
+        {
+            cubeActor->Press();
+        }
+    }
+    auto& body = world.get_shape_matching_body(0);
+    if (ImGui::Button(U8("リセットする")))
+    {
+        body.reset_to_rest_state(world.particles);
+        body.set_position(world.particles, { -1, 2, 0 });
+        body.rigid_rotation_quat = { 0,0,0,1 };
+        bodyScale = 1.95f;
+        stiffness = 0.1f;
+        deformationBlend = 0.2f;
+        solver->solver_iterations = 5;
+    }
+    ImGui::Text(U8("F7でデバックカメラ切り替え"));
+    ImGui::End();
+#else
     SceneBase::DrawGui();
     ImGui::Begin("pbd");
     ImGui::Checkbox("show_particles", &show_particles);
@@ -769,12 +807,8 @@ void SampleScene::DrawGui()
     ImGui::DragFloat3("center1", &center1.x, 0.1f);
     ImGui::DragFloat3("angularVelocity1", &angularVelocity1.x, 0.1f);
     ImGui::DragFloat("radius1", &radius1, 0.1f, 0.0f, 5.0f);
-#if 0
-    if (ImGui::Button("Button"))
-    {
-        body.set_position(world.particles, { 0, 2, 0 });
-    }
-#endif // 1
+
     ImGui::End();
+#endif // 0
 #endif
 }

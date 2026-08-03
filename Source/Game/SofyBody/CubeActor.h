@@ -17,8 +17,35 @@ public:
 
     DirectX::XMFLOAT3X3 GetRotationMatrix3X3();
 
+    // 潰す
+    void Press();
+
     DirectX::XMFLOAT3 extent = { 10.0f,3.0f,10.0f };
     //DirectX::XMFLOAT3 extent = { 3.0f,1.0f,3.0f };
 private:
     float viewScale = 0.8f;
+
+    enum class PressState
+    {
+        Idle,       // 待機
+        MovingDown, // 降下
+        BottomWait, // 下で停止
+        MovingUp,   // 上昇
+        TopWait     // 上で停止
+    };
+
+    PressState pressState = PressState::Idle;
+
+    // プレスに使用する変数
+    float topY = 7.6f;
+    float bottomY = 4.3f;
+
+    float pressSpeed = 3.0f;
+    float returnSpeed = 2.0f;
+
+    float waitTimer = 0.0f;
+    float bottomWaitTime = 0.5f;
+    float topWaitTime = 1.0f;
+
+    bool repeatPress = true;
 };

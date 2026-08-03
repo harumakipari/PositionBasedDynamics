@@ -60,7 +60,7 @@ bool SceneBase::Initialize(ID3D11Device* device, const UINT64 width, UINT height
     HRESULT hr = { S_OK };
 
     //スカイマップ
-    skyMap = std::make_unique<decltype(skyMap)::element_type>(device, L"./Data/Environment/Sky/stage/skybox.dds");
+    skyMap = std::make_unique<decltype(skyMap)::element_type>(device, L"./Data/Environment/Sky/sky/skybox.dds");
 
     fullscreenQuad = std::make_unique<FullScreenQuad>(device);
 
@@ -149,18 +149,18 @@ void SceneBase::Update(float deltaTime)
     //uiManager->Update(deltaTime);
 
 #ifdef _DEBUG
-    if (InputSystem::GetInputState("F8", InputStateMask::Trigger))
-    {// デバッグカメラとゲームカメラの切り替え
-        cameraManager->ToggleCamera(this);
-    }
-    if (InputSystem::GetInputState("F7", InputStateMask::Trigger))
-    {// シネマカメラとゲームカメラの切り替え
-        cameraManager->ToggleCinematicCamera(this);
-    }
-    if (InputSystem::GetInputState("F6", InputStateMask::Trigger))
-    {// ムービーカメラとゲームカメラの切り替え
-        cameraManager->ToggleMovieCamera(this);
-    }
+    //if (InputSystem::GetInputState("F8", InputStateMask::Trigger))
+    //{// デバッグカメラとゲームカメラの切り替え
+    //    cameraManager->ToggleCamera(this);
+    //}
+    //if (InputSystem::GetInputState("F7", InputStateMask::Trigger))
+    //{// シネマカメラとゲームカメラの切り替え
+    //    cameraManager->ToggleCinematicCamera(this);
+    //}
+    //if (InputSystem::GetInputState("F6", InputStateMask::Trigger))
+    //{// ムービーカメラとゲームカメラの切り替え
+    //    cameraManager->ToggleMovieCamera(this);
+    //}
 #endif // !_DEBUG
 }
 
@@ -722,6 +722,8 @@ bool SceneBase::Uninitialize(ID3D11Device* device)
 void SceneBase::DrawGui()
 {
 #ifdef USE_IMGUI
+
+
     SetupImGuiStyle();
 
     DrawDockSpace();

@@ -122,4 +122,8 @@ private:
     std::shared_ptr<PlaneActor> backPlaneActor;
 
     std::shared_ptr<CinemaCamera> cinemaCameraActor;
+
+
+
+
 };
