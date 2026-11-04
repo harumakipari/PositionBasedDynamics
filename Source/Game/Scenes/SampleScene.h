@@ -84,6 +84,11 @@ private:
     const float physics_time_step = 1.0f / 30.0f;
 
     bool show_particles = false;
+    bool show_surface_particles = true;
+    bool show_interior_particles = true;
+    float surface_particle_size = 1.0f;
+    float interior_particle_size = 3.0f;
+    DirectX::XMFLOAT3 interior_particle_color = { 0.15f, 0.85f, 1.0f };
     bool show_wireframe = false;
 
     std::vector<PBDActor> pbdActors;

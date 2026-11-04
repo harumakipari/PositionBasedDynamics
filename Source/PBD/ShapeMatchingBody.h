@@ -28,16 +28,16 @@ namespace PBD
         IndexRange particle_range;
 
         // Rest offsets (q_i)
-        std::vector<DirectX::XMFLOAT4> rest_offsets;
+        std::vector<DirectX::XMFLOAT4> restOffsets;
 
         // Rest center of mass (c0)
         DirectX::XMFLOAT4 rest_center_of_mass{};
 
         // Current COM (c)
-        DirectX::XMFLOAT4 center_of_mass{};
+        DirectX::XMFLOAT4 centerOfMass{};
 
         // Previous COM (for velocity estimation)
-        DirectX::XMFLOAT4 previous_center_of_mass{};
+        DirectX::XMFLOAT4 previousCenterOfMass{};
 
         // Final transform (R or R*S)
         DirectX::XMMATRIX transform{ DirectX::XMMatrixIdentity() };
@@ -49,17 +49,17 @@ namespace PBD
 
         // Solver parameters
         float stiffness{ 1.0f };
-        float deformation_blend{ 0.2f };
+        float deformationBlend{ 0.2f };
 
         // Precomputed inverse rest covariance
-        DirectX::XMMATRIX Aqq_inv{ DirectX::XMMatrixIdentity() };
+        DirectX::XMMATRIX AqqInv{ DirectX::XMMatrixIdentity() };
 
         bool active = true;
         float scale = 1.0f;
-        bool constrain_rotation_to_y = false;
+        bool constrainRotationToY = false;
 
         // Core operations
-        DirectX::XMVECTOR compute_center_of_mass(const std::vector<PBDParticle>& particles) const;
+        DirectX::XMVECTOR ComputeCenterOfMass(const std::vector<PBDParticle>& particles) const;
 
         void compute_rest_covariance(const std::vector<PBDParticle>& particles);
 

@@ -10,6 +10,7 @@ VS_OUT main(VS_IN input)
             viewProjection);
 
     output.color = input.color;
+    output.size = input.size;
 
     return output;
 }

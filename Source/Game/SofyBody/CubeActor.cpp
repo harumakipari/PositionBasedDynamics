@@ -11,6 +11,7 @@ void CubeActor::Initialize(const Transform& transform)
     pressMeshComponent->SetModel("./Data/Models/BeltConveyor/press.glb", false, false);
     pressMeshComponent->SetRelativeScaleDirect({ 0.2f,0.5f,0.2f });
     pressMeshComponent->SetRelativeLocationDirect({ 0.0f,-0.55f,0.0f });
+    pressMeshComponent->SetIsVisible(false);
 }
 
 void CubeActor::Update(float elapsedTime)

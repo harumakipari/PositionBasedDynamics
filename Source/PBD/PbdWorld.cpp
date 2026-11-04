@@ -194,7 +194,7 @@ namespace PBD
                 p.previousPosition = position;
                 p.velocity = { 0,0,0 };
 
-                p.inverse_mass = inv_mass;
+                p.inverseMass = inv_mass;
                 p.radius = radius;
                 p.phase = phase;
 
@@ -269,10 +269,10 @@ namespace PBD
         {
             const PBDParticle& p = particles[begin + i];
 
-            if (p.inverse_mass == 0.0f)
+            if (p.inverseMass == 0.0f)
                 continue;
 
-            float mass = 1.0f / p.inverse_mass;
+            float mass = 1.0f / p.inverseMass;
 
             mass_sum += mass;
             c += XMLoadFloat3(&p.position) * mass;
@@ -291,9 +291,9 @@ namespace PBD
 
         body.particle_range = { begin, count };
         body.stiffness = stiffness;
-        body.deformation_blend = deformation_blend;
+        body.deformationBlend = deformation_blend;
 
-        XMStoreFloat4(&body.center_of_mass, c);
+        XMStoreFloat4(&body.centerOfMass, c);
         XMStoreFloat4(&body.rest_center_of_mass, c);
 
         // -------------------------------------------------------------------------
@@ -307,14 +307,14 @@ namespace PBD
         // 重心からの相対位置を保存する。
         // -------------------------------------------------------------------------
 
-        body.rest_offsets.resize(count);
+        body.restOffsets.resize(count);
 
         for (int i = 0; i < count; i++)
         {
             XMVECTOR x = XMLoadFloat3(&particles[begin + i].position);
             XMVECTOR qi = x - c;
 
-            XMStoreFloat4(&body.rest_offsets[i], qi);
+            XMStoreFloat4(&body.restOffsets[i], qi);
         }
 
         body.transform = XMMatrixIdentity();

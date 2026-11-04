@@ -360,11 +360,21 @@ void SampleScene::Update(float deltaTime)
 #if 1
     // 5. 衝突後の粒子から「剛体の位置」を少しだけ追従させる
     {
-        XMVECTOR c_after = body.compute_center_of_mass(world.particles);
+        XMVECTOR c_after = body.ComputeCenterOfMass(world.particles);
         DirectX::XMStoreFloat3(&rb.position, c_after);
         // 回転も追従したければ、A から R を取って quaternion に戻す手もある
     }
 #endif // 0
+
+    if (InputSystem::GetInputState("A", InputStateMask::Trigger))
+    {
+        StartCarMove();
+    }
+    if (InputSystem::GetInputState("D", InputStateMask::Trigger))
+    {
+        BackCarMove();
+    }
+
 }
 
 void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
@@ -419,7 +429,14 @@ void SampleScene::Render(ID3D11DeviceContext* immediateContext, float deltaTime)
     // Particleデバッグ描画
     if (show_particles)
     {
-        particle_debug_renderer->draw(immediateContext, world.particles);
+        particle_debug_renderer->draw(
+            immediateContext,
+            world.particles,
+            show_surface_particles,
+            show_interior_particles,
+            surface_particle_size,
+            interior_particle_size,
+            interior_particle_color);
     }
     else
     {
@@ -650,7 +667,7 @@ void SampleScene::UpdateCarMove(float deltaTime, int index)
 
     // 車の現在の前方向
     //DirectX::XMVECTOR forward = body.transform.r[2];
-    DirectX::XMVECTOR forward = DirectX::XMVectorSet(0,0,1,0);
+    DirectX::XMVECTOR forward = DirectX::XMVectorSet(0, 0, 1, 0);
     //forward = DirectX::XMVector3Normalize(forward);
     forward = DirectX::XMVectorScale(forward, carDirection);
 
@@ -682,8 +699,8 @@ void SampleScene::HandleInput(float deltaTime)
     for (int i = 0; i < pbdActors.size(); ++i)
     {
         auto& body = world.get_shape_matching_body(i);
-        body.constrain_rotation_to_y = constrain_rotation_to_y;
-        body.deformation_blend = deformationBlend;
+        body.constrainRotationToY = constrain_rotation_to_y;
+        body.deformationBlend = deformationBlend;
         body.stiffness = stiffness;
         body.scale = bodyScale;
 
@@ -804,12 +821,25 @@ void SampleScene::DrawGui()
     //SceneBase::DrawGui();
     ImGui::Begin(U8("ShapeMatching"));
     ImGui::Checkbox(U8("パーティクル表示"), &show_particles);
+    ImGui::Checkbox("Show Surface Particles", &show_surface_particles);
+    ImGui::Checkbox("Show Interior Particles", &show_interior_particles);
+    ImGui::DragFloat("Surface Particle Size", &surface_particle_size, 0.1f, 1.0f, 64.0f, "%.1f px");
+    ImGui::DragFloat("Interior Particle Size", &interior_particle_size, 0.1f, 1.0f, 64.0f, "%.1f px");
+    ImGui::ColorEdit3("Interior Particle Color", &interior_particle_color.x);
     ImGui::Checkbox(U8("シミュレーション開始"), &enable_simulation);
     ImGui::Checkbox(U8("ワイヤーフレーム表示"), &show_wireframe);
     ImGui::DragFloat(U8("スケール"), &bodyScale, 0.01f, 0.01f, 10.0f, "%.4f");
     ImGui::DragFloat(U8("剛性(形状を維持する強さ)"), &stiffness, 0.001f, 0.0001f, 1.0f, "%.4f");
     ImGui::DragFloat(U8("変形ブレンド(変形量の反映度)"), &deformationBlend, 0.001f, 0.0f, 1.0f, "%.4f");
     ImGui::SliderInt(U8("ソルバー(制約解決の反復回数)"), &solver->solver_iterations, 0, 30);
+    ImGui::Checkbox(U8("Y軸固定するか"), &constrain_rotation_to_y);
+
+    DirectX::XMFLOAT3 pos = cubeActor->GetPosition();
+    ImGui::SliderFloat(U8("押しつぶされる高さ"), &pos.y, 4.3f, 7.6f, "%.1f");
+    cubeActor->SetPosition(pos);
+
+
+
     if (ImGui::Button(U8("潰す")))
     {
         if (cubeActor)

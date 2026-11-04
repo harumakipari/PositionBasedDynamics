@@ -1229,6 +1229,9 @@
     <FxCompile Include="Shader\ParticleDebugRendererVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Shader\ParticleDebugRendererGS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
     <FxCompile Include="Shader\ParticleDebugRendererPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>

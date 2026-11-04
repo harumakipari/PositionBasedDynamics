@@ -30,7 +30,7 @@ namespace PBD
 	//
 	// Pitch/Roll を除去し、Yaw のみ保持する
 	// ------------------------------------------------------------
-	static XMMATRIX constrain_rotation_y(const XMMATRIX& R)
+	static XMMATRIX ConstrainRotationY(const XMMATRIX& R)
 	{
 		XMVECTOR forward = R.r[2];
 
@@ -59,7 +59,7 @@ namespace PBD
 	//
 	// 回転行列を反復的に抽出する
 	// ------------------------------------------------------------
-	static XMMATRIX polar_decomposition(const XMMATRIX& A, int iterations = 5)
+	static XMMATRIX PolarDecomposition(const XMMATRIX& A, int iterations = 5)
 	{
 		XMMATRIX R = A;
 
@@ -155,10 +155,10 @@ namespace PBD
 		//----------------------------------------------------------
 		// 1. 重心計算
 		//----------------------------------------------------------
-		XMVECTOR c = compute_center_of_mass(particles);
+		XMVECTOR c = ComputeCenterOfMass(particles);
 
-		previous_center_of_mass = center_of_mass;
-		XMStoreFloat4(&center_of_mass, c);
+		previousCenterOfMass = centerOfMass;
+		XMStoreFloat4(&centerOfMass, c);
 
 		//----------------------------------------------------------
 		// 2. A_pq 構築
@@ -173,20 +173,20 @@ namespace PBD
 		{
 			const PBDParticle& p = particles[i];
 
-			if (p.inverse_mass == 0.0f)
+			if (p.inverseMass == 0.0f)
 				continue;
 
-			const float m = 1.0f / p.inverse_mass;
+			const float m = 1.0f / p.inverseMass;
 
 			const XMVECTOR x = XMLoadFloat3(&p.position);
-			XMVECTOR q = XMLoadFloat4(&rest_offsets[local]);
+			XMVECTOR q = XMLoadFloat4(&restOffsets[local]);
 			q = XMVectorScale(q, scale);
 
-			const XMVECTOR p_rel = (x - c) * m;
+			const XMVECTOR pRel = (x - c) * m;
 
-			Apq.r[0] = XMVectorMultiplyAdd(p_rel, XMVectorSplatX(q), Apq.r[0]);
-			Apq.r[1] = XMVectorMultiplyAdd(p_rel, XMVectorSplatY(q), Apq.r[1]);
-			Apq.r[2] = XMVectorMultiplyAdd(p_rel, XMVectorSplatZ(q), Apq.r[2]);
+			Apq.r[0] = XMVectorMultiplyAdd(pRel, XMVectorSplatX(q), Apq.r[0]);
+			Apq.r[1] = XMVectorMultiplyAdd(pRel, XMVectorSplatY(q), Apq.r[1]);
+			Apq.r[2] = XMVectorMultiplyAdd(pRel, XMVectorSplatZ(q), Apq.r[2]);
 		}
 
 		Apq.r[3] = XMVectorSet(0, 0, 0, 1);
@@ -194,16 +194,16 @@ namespace PBD
 		//----------------------------------------------------------
 		// 3. A計算　Rest状態の共分散逆行列 
 		//----------------------------------------------------------
-		const float inv_s2 = 1.0f / (scale * scale);
-		XMMATRIX A = XMMatrixMultiply(Aqq_inv * inv_s2, Apq);
+		const float invS2 = 1.0f / (scale * scale);
+		XMMATRIX A = XMMatrixMultiply(AqqInv * invS2, Apq);
 
 		//----------------------------------------------------------
 		// 4. 回転抽出 R
 		//----------------------------------------------------------
-		XMMATRIX R = polar_decomposition(A);
+		XMMATRIX R = PolarDecomposition(A);
 
-		if (constrain_rotation_to_y)
-			R = constrain_rotation_y(R);
+		if (constrainRotationToY)
+			R = ConstrainRotationY(R);
 
 		if (XMVectorGetX(XMMatrixDeterminant(R)) < 0.0f)
 			R.r[2] = XMVectorNegate(R.r[2]);
@@ -211,7 +211,7 @@ namespace PBD
 		//----------------------------------------------------------
 		// 5. 変形行列S
 		//----------------------------------------------------------
-		if (deformation_blend > 0.0f)
+		if (deformationBlend > 0.0f)
 		{
 			XMMATRIX S = XMMatrixMultiply(XMMatrixTranspose(R), A);
 
@@ -219,15 +219,15 @@ namespace PBD
 
 			if (det > 1e-6f)
 			{
-				float inv_vol = 1.0f / std::cbrt(det);
-				S = XMMatrixMultiply(XMMatrixScaling(inv_vol, inv_vol, inv_vol), S);
+				float invVol = 1.0f / std::cbrt(det);
+				S = XMMatrixMultiply(XMMatrixScaling(invVol, invVol, invVol), S);
 
 				S = 0.5f * (S + XMMatrixTranspose(S));
 
 				XMMATRIX I = XMMatrixIdentity();
 
 				for (int i = 0; i < 3; ++i)
-					S.r[i] = XMVectorLerp(I.r[i], S.r[i], deformation_blend);
+					S.r[i] = XMVectorLerp(I.r[i], S.r[i], deformationBlend);
 
 				S.r[3] = XMVectorSet(0, 0, 0, 1);
 
@@ -244,10 +244,10 @@ namespace PBD
 		{
 			PBDParticle& p = particles[i];
 
-			if (p.inverse_mass == 0.0f)
+			if (p.inverseMass == 0.0f)
 				continue;
 
-			XMVECTOR q = XMLoadFloat4(&rest_offsets[local]);
+			XMVECTOR q = XMLoadFloat4(&restOffsets[local]);
 			q = XMVectorScale(q, scale);
 
 			XMVECTOR goal = c + XMVector3TransformNormal(q, R);
@@ -267,7 +267,7 @@ namespace PBD
 	//     c = Σ m_i x_i / Σ m_i
 	//     逆質量が0の粒子は無視する。
 	// -----------------------------------------------------------------------------
-	XMVECTOR ShapeMatchingBody::compute_center_of_mass(const std::vector<PBDParticle>& particles) const
+	XMVECTOR ShapeMatchingBody::ComputeCenterOfMass(const std::vector<PBDParticle>& particles) const
 	{
 		XMVECTOR c = XMVectorZero();
 		float mass_sum = 0.0f;
@@ -279,10 +279,10 @@ namespace PBD
 		{
 			const PBDParticle& p = particles[i];
 
-			if (p.inverse_mass == 0.0f)
+			if (p.inverseMass == 0.0f)
 				continue;
 
-			const float m = 1.0f / p.inverse_mass;
+			const float m = 1.0f / p.inverseMass;
 
 			c += XMLoadFloat3(&p.position) * m;
 			mass_sum += m;
@@ -316,12 +316,12 @@ namespace PBD
 		{
 			const PBDParticle& p = particles[i];
 
-			if (p.inverse_mass == 0.0f)
+			if (p.inverseMass == 0.0f)
 				continue;
 
-			const float m = 1.0f / p.inverse_mass;
+			const float m = 1.0f / p.inverseMass;
 
-			XMVECTOR q = XMLoadFloat4(&rest_offsets[local]);
+			XMVECTOR q = XMLoadFloat4(&restOffsets[local]);
 			q = XMVectorScale(q, m);
 
 			Aqq.r[0] = XMVectorMultiplyAdd(q, XMVectorSplatX(q), Aqq.r[0]);
@@ -331,7 +331,7 @@ namespace PBD
 
 		Aqq.r[3] = XMVectorSet(0, 0, 0, 1);
 
-		Aqq_inv = XMMatrixInverse(nullptr, Aqq);
+		AqqInv = XMMatrixInverse(nullptr, Aqq);
 	}
 
 	// -----------------------------------------------------------------------------
@@ -352,7 +352,7 @@ namespace PBD
 		{
 			PBDParticle& p = particles[i];
 
-			XMVECTOR q = XMLoadFloat4(&rest_offsets[local]);
+			XMVECTOR q = XMLoadFloat4(&restOffsets[local]);
 			q = XMVectorScale(q, scale);
 
 			XMVECTOR x = XMVectorAdd(c0, q);
@@ -367,7 +367,7 @@ namespace PBD
 	// -----------------------------------------------------------------------------
 	void ShapeMatchingBody::set_position(std::vector<PBDParticle>& particles, const XMFLOAT3& position)
 	{
-		const XMVECTOR current_com = compute_center_of_mass(particles);
+		const XMVECTOR current_com = ComputeCenterOfMass(particles);
 		const XMVECTOR target = XMLoadFloat3(&position);
 		const XMVECTOR delta = XMVectorSubtract(target, current_com);
 

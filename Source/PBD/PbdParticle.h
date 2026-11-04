@@ -48,7 +48,7 @@ namespace PBD
         //
         // 0 ‚Ìê‡‚ÍŒÅ’è—±q‚Æ‚µ‚Äˆµ‚¤B
         // (–³ŒÀ¿—Ê = “®‚©‚È‚¢)
-        float inverse_mass{ 1.0f };
+        float inverseMass{ 1.0f };
 
         // —±q‚Ì“–‚½‚è”»’è”¼Œa
         //

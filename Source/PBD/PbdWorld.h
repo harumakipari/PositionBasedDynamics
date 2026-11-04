@@ -122,7 +122,7 @@ namespace PBD
 			auto& particle = particles.emplace_back();
 			particle.position = particle.previousPosition = position;
 			particle.velocity = velocity;
-			particle.inverse_mass = inverse_mass;
+			particle.inverseMass = inverse_mass;
 			particle.radius = radius;
 			particle.phase = phase;
 

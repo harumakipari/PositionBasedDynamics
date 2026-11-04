@@ -43,7 +43,7 @@ namespace PBD
         {
             p.previousPosition = p.position;
 
-            if (p.inverse_mass == 0.0f)
+            if (p.inverseMass == 0.0f)
                 continue;
 
             // 外力加速度を適用（例: 重力）
@@ -55,7 +55,7 @@ namespace PBD
         // Positionを予測
         for (PBDParticle& p : world.particles)
         {
-            if (p.inverse_mass == 0.0f)
+            if (p.inverseMass == 0.0f)
                 continue;
 
             p.position.x += p.velocity.x * dt;
@@ -225,7 +225,7 @@ namespace PBD
 
         for (PBDParticle& p : world.particles)
         {
-            if (p.inverse_mass == 0.0f)
+            if (p.inverseMass == 0.0f)
                 continue;
 
             // v = (x_new - x_old) / dt
@@ -266,7 +266,7 @@ namespace PBD
 
         PBDParticle& p = world.particles[fc.a.index];
 
-        if (p.inverse_mass == 0.0f)
+        if (p.inverseMass == 0.0f)
             return;
 
         XMVECTOR x = XMLoadFloat3(&p.position);
@@ -336,7 +336,7 @@ namespace PBD
 
         PBDParticle& p = world.particles[cc.a.index];
 
-        if (p.inverse_mass == 0.0f)
+        if (p.inverseMass == 0.0f)
             return;
 
         if (cc.phi >= 0.0f)
@@ -397,8 +397,8 @@ namespace PBD
         PBDParticle& p1 = world.particles[c.particle_a];
         PBDParticle& p2 = world.particles[c.particle_b];
 
-        const float w1 = p1.inverse_mass;
-        const float w2 = p2.inverse_mass;
+        const float w1 = p1.inverseMass;
+        const float w2 = p2.inverseMass;
 
         // 両方Staticなら補正不要
         const float w_sum = w1 + w2;
